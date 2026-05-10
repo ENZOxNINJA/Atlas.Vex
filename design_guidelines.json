@@ -1,0 +1,109 @@
+{
+  "theme": "Dark",
+  "archetype": "7 - Electric & Neon / Retro-Futurism (Industrial Terminal Variant)",
+  "vibe": "Cyberpunk, AI-ops, Autonomous Command Center, precise, stealth, high-tech, cinematic",
+  "colors": {
+    "background": {
+      "main": "#020617",
+      "surface": "#09090B",
+      "glass": "bg-zinc-950/40",
+      "overlay": "bg-black/50"
+    },
+    "borders": {
+      "default": "border-zinc-800",
+      "focus": "border-[#00E5FF]",
+      "glass": "border-white/5"
+    },
+    "accents": {
+      "primary": "#00E5FF",
+      "secondary": "#39FF14",
+      "tertiary": "#FFB000",
+      "danger": "#FF003C"
+    },
+    "text": {
+      "heading": "#F8FAFC",
+      "body": "#CBD5E1",
+      "muted": "#64748B"
+    }
+  },
+  "typography": {
+    "font_families": {
+      "heading": "'Unbounded', sans-serif",
+      "body": "'Outfit', sans-serif",
+      "monospace": "'JetBrains Mono', monospace"
+    },
+    "sizes": {
+      "h1": "text-4xl sm:text-5xl lg:text-6xl tracking-tighter",
+      "h2": "text-2xl sm:text-3xl lg:text-4xl tracking-tight",
+      "h3": "text-xl sm:text-2xl tracking-tight",
+      "h4": "text-lg sm:text-xl",
+      "body": "text-base leading-relaxed",
+      "metrics": "text-4xl font-bold tracking-tighter font-mono",
+      "labels": "text-xs uppercase tracking-[0.2em]"
+    }
+  },
+  "layout_and_spacing": {
+    "container": "max-w-7xl mx-auto px-6 sm:px-8 md:px-12",
+    "spacing_scale": "Use generous padding: py-24, py-32 for sections. gap-8 or gap-12 for grids.",
+    "grids": {
+      "skills_grid": "Bento 'Tetris' Grid (Mode A). grid-cols-1 md:grid-cols-4 lg:grid-cols-6. Mix square and wide spans.",
+      "projects_grid": "1 column on mobile, 3 columns on desktop. Heavy focus on image with dark gradient overlays.",
+      "metrics_grid": "Bento 'Control Room' Grid (Mode B). Dense, minimal padding, 1px solid borders, neon numbers."
+    }
+  },
+  "surface_strategies": {
+    "hero": "Dark void with radial gradient overlays. Use a 3D neural-network visualization in the background using @react-three/fiber.",
+    "cards": "Glassmorphism: bg-zinc-950/40 backdrop-blur-3xl border border-zinc-800 rounded-[32px] overflow-hidden.",
+    "buttons": "Primary CTA: Flat black background, 1px solid #00E5FF border, #00E5FF text. Hover: bg-[#00E5FF]/10. Geometric, sharp.",
+    "nav": "Sticky glass header (z-50): backdrop-blur-2xl bg-[#020617]/70 border-b border-zinc-800/50."
+  },
+  "motion": {
+    "library": "framer-motion",
+    "scroll_reveals": "Staggered fade-up for all grid items. y: 40 -> y: 0, opacity: 0 -> opacity: 1, duration: 0.6.",
+    "hover_states": "Cards: subtle scale (1.02), border color shift to #00E5FF/50, image slight zoom.",
+    "advanced_upgrade": "Use @react-three/fiber and @react-three/drei in the Hero section to render an interactive, slowly rotating 3D particle network (glowing cyan and emerald nodes connecting)."
+  },
+  "testing": {
+    "rules": "All interactive elements MUST include data-testid. Example: data-testid='contact-form-submit-button', data-testid='project-legion-core-card'."
+  },
+  "images": {
+    "hero_background": {
+      "url": "https://images.unsplash.com/photo-1775057154553-0f3e8902fea3?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1MDV8MHwxfHNlYXJjaHw0fHxkYXJrJTIwYWJzdHJhY3QlMjBuZXR3b3JrfGVufDB8fHx8MTc3ODM3NTI3Nnww&ixlib=rb-4.1.0&q=85",
+      "description": "Abstract geometric lines and shapes on black background"
+    },
+    "project_legion_core": {
+      "url": "https://images.pexels.com/photos/17489160/pexels-photo-17489160.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "description": "Detailed illuminated server racks showcasing modern technology infrastructure"
+    },
+    "project_atlas_memory": {
+      "url": "https://images.pexels.com/photos/17489150/pexels-photo-17489150.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "description": "Blue lit computer server rack in a data center"
+    },
+    "project_omega_security": {
+      "url": "https://images.unsplash.com/photo-1628763228722-b11a9c545ed7?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NzZ8MHwxfHNlYXJjaHwzfHxjeWJlcnNlY3VyaXR5JTIwc2VydmVyJTIwbmVvbnxlbnwwfHx8fDE3NzgzNzUyNzZ8MA&ixlib=rb-4.1.0&q=85",
+      "description": "Black and red digital device"
+    }
+  },
+  "instructions_to_main_agent": {
+    "setup": [
+      "yarn add framer-motion lucide-react @phosphor-icons/react three @react-three/fiber @react-three/drei",
+      "Add google fonts Unbounded, Outfit, and JetBrains Mono to index.html."
+    ],
+    "structure": [
+      "Build a single-page portfolio with sticky navigation.",
+      "Implement the 3D Neural Network as an absolute background in the Hero section using @react-three/fiber.",
+      "Sections: Hero (with 3D bg), Identity/Specialization Panel, Skills Grid, Featured Projects, Mission Statement, Systems Metrics, Contact Form.",
+      "Ensure all borders are zinc-800 and rounded-[32px] for major cards."
+    ],
+    "design_rules": [
+      "Follow E1's Universal Design Rules: layered depth, blur-3xl opacity-20 colored glows under cards.",
+      "Never use pure white (#FFFFFF) background anywhere.",
+      "Ensure the 3D network has transparency so the dark background (#020617) shows through."
+    ],
+    "data_requirements": [
+      "The contact form must be fully functional (connected to FastAPI + MongoDB backend).",
+      "Include placeholder links for Resume/CV, GitHub, LinkedIn, X-Twitter.",
+      "Ensure System Metrics are displayed as a live telemetry dashboard (animated counters or static high-contrast metrics grid)."
+    ]
+  }
+}
