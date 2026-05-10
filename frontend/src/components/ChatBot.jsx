@@ -5,6 +5,13 @@ import { Bot, X, Send, Sparkles, Briefcase, CheckCircle2 } from "lucide-react";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const SESSION_KEY = "atlasvex.chat.session";
+const POS_KEY = "atlasvex.chat.btn.pos";
+
+const DEFAULT_POS = () => {
+  if (typeof window === "undefined") return { x: 24, y: 0 };
+  // bottom-left default: 24px from left, 24px from bottom
+  return { x: 24, y: window.innerHeight - 80 };
+};
 
 const SUGGESTIONS = [
   "Who is Alan Marvel?",
@@ -73,6 +80,95 @@ export default function ChatBot() {
   const [loading, setLoading] = useState(false);
   const sessionId = useRef(getSessionId());
   const scrollRef = useRef(null);
+
+  // ---- Draggable toggle position ----
+  const [pos, setPos] = useState(() => {
+    try {
+      const saved = localStorage.getItem(POS_KEY);
+      if (saved) {
+        const p = JSON.parse(saved);
+        if (typeof p?.x === "number" && typeof p?.y === "number") return p;
+      }
+    } catch {}
+    return DEFAULT_POS();
+  });
+  const dragRef = useRef({
+    pointerId: null,
+    startX: 0,
+    startY: 0,
+    origX: 0,
+    origY: 0,
+    moved: false,
+  });
+
+  // Keep within viewport on resize
+  useEffect(() => {
+    const onResize = () => {
+      setPos((p) => {
+        const w = 180;
+        const h = 56;
+        return {
+          x: Math.max(8, Math.min(p.x, window.innerWidth - w - 8)),
+          y: Math.max(8, Math.min(p.y, window.innerHeight - h - 8)),
+        };
+      });
+    };
+    window.addEventListener("resize", onResize);
+    onResize();
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  const persistPos = (p) => {
+    try {
+      localStorage.setItem(POS_KEY, JSON.stringify(p));
+    } catch {}
+  };
+
+  const onPointerDown = (e) => {
+    if (e.button && e.button !== 0) return;
+    e.target.setPointerCapture?.(e.pointerId);
+    dragRef.current = {
+      pointerId: e.pointerId,
+      startX: e.clientX,
+      startY: e.clientY,
+      origX: pos.x,
+      origY: pos.y,
+      moved: false,
+    };
+  };
+
+  const onPointerMove = (e) => {
+    const d = dragRef.current;
+    if (d.pointerId !== e.pointerId) return;
+    const dx = e.clientX - d.startX;
+    const dy = e.clientY - d.startY;
+    if (!d.moved && Math.hypot(dx, dy) > 4) {
+      d.moved = true;
+    }
+    if (!d.moved) return;
+    const w = 180;
+    const h = 56;
+    const nx = Math.max(8, Math.min(d.origX + dx, window.innerWidth - w - 8));
+    const ny = Math.max(8, Math.min(d.origY + dy, window.innerHeight - h - 8));
+    setPos({ x: nx, y: ny });
+  };
+
+  const onPointerUp = (e) => {
+    const d = dragRef.current;
+    if (d.pointerId !== e.pointerId) return;
+    if (d.moved) {
+      persistPos(pos);
+      // suppress click that follows a drag
+      e.stopPropagation();
+    } else {
+      setOpen((v) => !v);
+    }
+    dragRef.current = { ...dragRef.current, pointerId: null, moved: false };
+  };
+
+  // Compute panel anchor based on toggle position
+  const isLeft = pos.x < (typeof window !== "undefined" ? window.innerWidth / 2 : 720);
+  const isTop = pos.y < (typeof window !== "undefined" ? window.innerHeight / 2 : 400);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -217,14 +313,20 @@ export default function ChatBot() {
 
   return (
     <>
-      <button
-        onClick={() => setOpen((v) => !v)}
+      <div
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
         data-testid="chatbot-toggle"
-        className="fixed bottom-6 left-6 z-[60] group"
-        aria-label="Open Atlas Vex chat"
+        role="button"
+        tabIndex={0}
+        aria-label="Open Atlas Vex chat (drag to move)"
+        style={{ left: pos.x, top: pos.y, touchAction: "none" }}
+        className="fixed z-[60] group cursor-grab active:cursor-grabbing select-none"
       >
-        <span className="absolute inset-0 rounded-full bg-[#00E5FF] opacity-30 blur-2xl group-hover:opacity-50 transition-opacity" />
-        <span className="relative flex items-center gap-2 pl-4 pr-5 py-3 rounded-full border border-[#00E5FF]/60 bg-[#020617]/90 backdrop-blur-xl text-[#00E5FF] hover:bg-[#00E5FF]/10 transition-colors">
+        <span className="absolute inset-0 rounded-full bg-[#00E5FF] opacity-30 blur-2xl group-hover:opacity-50 transition-opacity pointer-events-none" />
+        <span className="relative flex items-center gap-2 pl-4 pr-5 py-3 rounded-full border border-[#00E5FF]/60 bg-[#020617]/90 backdrop-blur-xl text-[#00E5FF] hover:bg-[#00E5FF]/10 transition-colors pointer-events-none">
           <span className="relative flex">
             <Bot size={18} />
             <span className="absolute -top-0.5 -right-1 w-2 h-2 rounded-full bg-[#39FF14] blink shadow-[0_0_10px_#39FF14]" />
@@ -232,8 +334,14 @@ export default function ChatBot() {
           <span className="font-mono text-[11px] tracking-[0.22em] uppercase">
             {open ? "Close" : "Atlas Vex"}
           </span>
+          <span
+            className="ml-1 font-mono text-[9px] tracking-[0.3em] text-slate-500 hidden sm:inline"
+            title="Drag to move"
+          >
+            ⋮⋮
+          </span>
         </span>
-      </button>
+      </div>
 
       <AnimatePresence>
         {open && (
@@ -242,7 +350,13 @@ export default function ChatBot() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 24, scale: 0.96 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
-            className="fixed bottom-24 left-4 sm:left-6 z-[55] w-[calc(100vw-2rem)] sm:w-[420px] max-w-[440px] h-[600px] max-h-[80vh] rounded-[28px] border border-zinc-800 bg-[#020617]/95 backdrop-blur-2xl flex flex-col overflow-hidden shadow-[0_30px_80px_-20px_rgba(0,229,255,0.35)]"
+            style={{
+              left: isLeft ? Math.max(16, pos.x) : "auto",
+              right: isLeft ? "auto" : Math.max(16, window.innerWidth - pos.x - 180),
+              bottom: isTop ? "auto" : Math.max(16, window.innerHeight - pos.y + 12),
+              top: isTop ? Math.max(16, pos.y + 64) : "auto",
+            }}
+            className="fixed z-[55] w-[calc(100vw-2rem)] sm:w-[420px] max-w-[440px] h-[600px] max-h-[80vh] rounded-[28px] border border-zinc-800 bg-[#020617]/95 backdrop-blur-2xl flex flex-col overflow-hidden shadow-[0_30px_80px_-20px_rgba(0,229,255,0.35)]"
             data-testid="chatbot-panel"
           >
             <div className="px-5 py-4 border-b border-zinc-800 flex items-center justify-between">
