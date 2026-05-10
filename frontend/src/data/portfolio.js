@@ -1,5 +1,5 @@
 export const PROFILE = {
-  name: "Alan Jake Marvel",
+  name: "Alan Marvel",
   alias: "Jake The Vex",
   title: "Autonomous Systems Architect",
   brand: "ATLAS VEX",
