@@ -69,6 +69,29 @@ class ChatMessageIn(BaseModel):
     message: str = Field(..., min_length=1, max_length=2000)
 
 
+class IntakeCreate(BaseModel):
+    session_id: str = Field(..., min_length=1, max_length=80)
+    project_type: str = Field(..., min_length=1, max_length=80)
+    timeline: str = Field(..., min_length=1, max_length=80)
+    budget: str = Field(..., min_length=1, max_length=80)
+    name: str | None = Field(default=None, max_length=120)
+    email: EmailStr | None = None
+    notes: str | None = Field(default=None, max_length=2000)
+
+
+class IntakeRecord(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    session_id: str
+    project_type: str
+    timeline: str
+    budget: str
+    name: str | None = None
+    email: EmailStr | None = None
+    notes: str | None = None
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
 class ChatMessageOut(BaseModel):
     session_id: str
     reply: str
@@ -238,6 +261,34 @@ async def chat_history(session_id: str):
         {"_id": 0, "id": 1, "role": 1, "content": 1, "timestamp": 1},
     ).sort("timestamp", 1).to_list(200)
     return {"session_id": session_id, "messages": items}
+
+
+@api_router.post("/intake", response_model=IntakeRecord, status_code=201)
+async def submit_intake(payload: IntakeCreate):
+    """Lead-qualifying intake captured from the Atlas Vex chatbot."""
+    obj = IntakeRecord(**payload.model_dump())
+    doc = obj.model_dump()
+    doc['timestamp'] = doc['timestamp'].isoformat()
+    await db.intake_records.insert_one(doc)
+
+    # Mirror to contact_messages for unified inbox
+    summary = (
+        f"[Atlas Vex Intake]\n"
+        f"Project: {obj.project_type}\n"
+        f"Timeline: {obj.timeline}\n"
+        f"Budget: {obj.budget}\n"
+        + (f"Notes: {obj.notes}\n" if obj.notes else "")
+        + f"Session: {obj.session_id}"
+    )
+    await db.contact_messages.insert_one({
+        "id": str(uuid.uuid4()),
+        "name": obj.name or "Atlas Vex Lead",
+        "email": (obj.email or "intake@atlasvex.io"),
+        "subject": f"Intake — {obj.project_type}",
+        "message": summary,
+        "timestamp": obj.timestamp.isoformat(),
+    })
+    return obj
 
 
 @api_router.get("/github/repos", response_model=List[GithubRepo])

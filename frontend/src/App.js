@@ -3,10 +3,12 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Portfolio from "./components/Portfolio";
 import ProjectDetail from "./components/ProjectDetail";
 import ChatBot from "./components/ChatBot";
+import LogoIntro from "./components/LogoIntro";
 
 function App() {
   return (
     <div className="App">
+      <LogoIntro />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Portfolio />} />
