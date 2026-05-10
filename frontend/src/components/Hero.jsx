@@ -88,12 +88,12 @@ export default function Hero() {
             Initialize Contact <ArrowRight size={14} />
           </button>
           <a
-            href={PROFILE.socials.calendly}
+            href="/resume"
             target="_blank"
             rel="noreferrer"
             className="btn-ghost"
             data-testid="hero-cta-resume"
-            title="Resume coming soon"
+            title="Open dossier (downloadable as PDF)"
           >
             <Download size={14} /> Download Dossier
           </a>

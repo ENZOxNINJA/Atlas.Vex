@@ -164,3 +164,36 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
   .blink { animation: none !important; opacity: 1 !important; }
   .btn-cta:hover, .btn-ghost:hover { transform: none !important; }
 }
+
+/* ---------- Print: optimize Resume page for PDF export ---------- */
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm 12mm;
+  }
+  html, body, #root, .App {
+    background: #ffffff !important;
+    color: #0f172a !important;
+  }
+  body {
+    background: #ffffff !important;
+  }
+  .resume-page {
+    background: #ffffff !important;
+    color: #0f172a !important;
+  }
+  .resume-page * {
+    color: inherit;
+  }
+  .resume-page .text-cyan,
+  .resume-page .text-\[\#00E5FF\] {
+    color: #00838f !important;
+  }
+  .resume-page .text-green,
+  .resume-page .text-\[\#39FF14\] {
+    color: #0e7c0e !important;
+  }
+  .resume-toolbar { display: none !important; }
+  .grid-bg, .glass, .glow-cyan, .glow-green { background: none !important; box-shadow: none !important; backdrop-filter: none !important; }
+  a { text-decoration: none; color: inherit; }
+}

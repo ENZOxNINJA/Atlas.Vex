@@ -109,27 +109,9 @@ export const NAV = [
 ];
 
 export const TESTIMONIALS = [
-  {
-    quote:
-      "Alan delivered architecture-level clarity in days. He doesn't just write code — he upgrades how the team thinks about systems.",
-    name: "Engineering Director",
-    role: "Series-B AI Startup",
-    accent: "#00E5FF",
-  },
-  {
-    quote:
-      "Rare combination — security-minded, AI-native, ships fast. We hired him for a 4-week sprint and renewed three times.",
-    name: "CTO",
-    role: "DevTools / Cybersecurity",
-    accent: "#39FF14",
-  },
-  {
-    quote:
-      "If you need autonomous systems that actually run in production — not demos — Alan is the engineer to call.",
-    name: "Principal Architect",
-    role: "Fortune 500 (NDA)",
-    accent: "#FFB000",
-  },
+  // Direct quotes are protected under engagement NDAs and shared one-to-one
+  // upon request. Component (Testimonials.jsx) renders the NDA-respecting
+  // "References available on request" treatment instead of a static quote list.
 ];
 
 export const CREDENTIALS = {
