@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
-import { Send, Mail, Github, Linkedin, Twitter } from "lucide-react";
+import { Send, Mail, Github, Phone } from "lucide-react";
 import { PROFILE } from "../data/portfolio";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -77,26 +77,37 @@ export default function Contact() {
                 </div>
               </a>
 
-              <div className="grid grid-cols-3 gap-3">
-                {[
-                  { Icon: Github, href: PROFILE.socials.github, label: "GitHub", id: "github" },
-                  { Icon: Linkedin, href: PROFILE.socials.linkedin, label: "LinkedIn", id: "linkedin" },
-                  { Icon: Twitter, href: PROFILE.socials.twitter, label: "X", id: "twitter" },
-                ].map(({ Icon, href, label, id }) => (
-                  <a
-                    key={label}
-                    href={href}
-                    target="_blank"
-                    rel="noreferrer"
-                    data-testid={`contact-social-${id}`}
-                    className="flex flex-col items-start gap-2 p-4 rounded-2xl border border-zinc-800 bg-zinc-950/50 hover:border-[#39FF14]/60 hover:text-[#39FF14] transition-colors text-slate-300"
-                  >
-                    <Icon size={16} />
-                    <span className="font-mono text-[10px] tracking-[0.22em] uppercase">
-                      {label}
+              <div className="grid grid-cols-2 gap-3">
+                <a
+                  href={PROFILE.socials.github}
+                  target="_blank"
+                  rel="noreferrer"
+                  data-testid="contact-social-github"
+                  className="flex items-center gap-3 p-4 rounded-2xl border border-zinc-800 bg-zinc-950/50 hover:border-[#39FF14]/60 hover:text-[#39FF14] transition-colors text-slate-300"
+                >
+                  <Github size={16} />
+                  <div className="flex flex-col items-start">
+                    <span className="font-mono text-[9px] tracking-[0.22em] uppercase text-slate-500">
+                      Repo
                     </span>
-                  </a>
-                ))}
+                    <span className="font-mono text-xs text-slate-200">@mrmarvel123</span>
+                  </div>
+                </a>
+                <a
+                  href={`tel:${PROFILE.socials.phoneRaw}`}
+                  data-testid="contact-phone-link"
+                  className="flex items-center gap-3 p-4 rounded-2xl border border-zinc-800 bg-zinc-950/50 hover:border-[#FFB000]/60 hover:text-[#FFB000] transition-colors text-slate-300"
+                >
+                  <Phone size={16} />
+                  <div className="flex flex-col items-start">
+                    <span className="font-mono text-[9px] tracking-[0.22em] uppercase text-slate-500">
+                      Voice
+                    </span>
+                    <span className="font-mono text-xs text-slate-200">
+                      {PROFILE.socials.phone}
+                    </span>
+                  </div>
+                </a>
               </div>
             </div>
           </div>

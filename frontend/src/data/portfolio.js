@@ -13,9 +13,9 @@ export const PROFILE = {
   portrait: "/assets/jake-portrait.png",
   socials: {
     email: "Alanmarvel5@gmail.com",
-    github: "https://github.com/jakethevex",
-    linkedin: "https://www.linkedin.com/in/jakethevex",
-    twitter: "https://x.com/jakethevex",
+    phone: "+60 11-1854 4005",
+    phoneRaw: "+601118544005",
+    github: "https://github.com/mrmarvel123",
   },
 };
 
@@ -42,6 +42,7 @@ export const PROJECTS = [
     description:
       "Multi-agent execution mesh with elastic scheduling, circuit-breakers, and signed inter-agent messaging. Designed for offline-first autonomous operations and zero-downtime fleet upgrades.",
     stack: ["Next.js", "Rust", "Agents", "Kubernetes"],
+    repo: "https://github.com/ENZOxNINJA",
     image:
       "https://images.pexels.com/photos/17489160/pexels-photo-17489160.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
     accent: "#00E5FF",
@@ -54,6 +55,7 @@ export const PROJECTS = [
     description:
       "Vector + graph memory layer with provenance, lineage, and audit-grade retrieval. Powers long-horizon reasoning for autonomous agents across production workloads.",
     stack: ["Postgres", "Vector DB", "LLM"],
+    repo: "https://github.com/AtlasTheDev123",
     image:
       "https://images.pexels.com/photos/17489150/pexels-photo-17489150.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
     accent: "#39FF14",
@@ -66,6 +68,7 @@ export const PROJECTS = [
     description:
       "Continuous threat-modeling pipeline with autonomous remediation playbooks, supply-chain attestations, and zero-trust workload identity at runtime.",
     stack: ["Docker", "Cloud", "Zero Trust"],
+    repo: "https://github.com/mrmarvel123",
     image:
       "https://images.unsplash.com/photo-1628763228722-b11a9c545ed7?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NzZ8MHwxfHNlYXJjaHwzfHxjeWJlcnNlY3VyaXR5JTIwc2VydmVyJTIwbmVvbnxlbnwwfHx8fDE3NzgzNzUyNzZ8MA&ixlib=rb-4.1.0&q=85",
     accent: "#FFB000",

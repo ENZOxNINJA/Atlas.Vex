@@ -31,13 +31,16 @@ export default function Projects() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {PROJECTS.map((p, i) => (
-            <motion.article
+            <motion.a
               key={p.id}
+              href={p.repo}
+              target="_blank"
+              rel="noreferrer"
               initial={{ opacity: 0, y: 32 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.15 }}
               transition={{ duration: 0.55, delay: i * 0.08 }}
-              className="group relative rounded-[32px] border border-zinc-800 bg-zinc-950/60 backdrop-blur-xl overflow-hidden hover:border-[#00E5FF]/50 transition-all"
+              className="group relative rounded-[32px] border border-zinc-800 bg-zinc-950/60 backdrop-blur-xl overflow-hidden hover:border-[#00E5FF]/50 transition-all block"
               data-testid={`project-${p.id}-card`}
             >
               <div
@@ -77,6 +80,11 @@ export default function Projects() {
                 </div>
                 <p className="text-slate-400 text-sm leading-relaxed mt-4">{p.description}</p>
 
+                <div className="flex items-center gap-2 mt-5 font-mono text-[10px] tracking-[0.22em] uppercase text-slate-500 group-hover:text-[#00E5FF] transition-colors">
+                  <span className="w-1 h-1 rounded-full bg-current" />
+                  github.com/{p.repo.replace("https://github.com/", "")}
+                </div>
+
                 <div className="flex flex-wrap gap-2 mt-6 pt-6 border-t border-zinc-800/80">
                   {p.stack.map((t) => (
                     <span
@@ -88,7 +96,7 @@ export default function Projects() {
                   ))}
                 </div>
               </div>
-            </motion.article>
+            </motion.a>
           ))}
         </div>
       </div>
