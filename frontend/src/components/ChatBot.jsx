@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Send, Briefcase, CheckCircle2 } from "lucide-react";
+import { X, Send, Briefcase, CheckCircle2, Mic, MicOff, Camera, Video, Volume2, VolumeX } from "lucide-react";
 import AiFaceLogo from "./AiFaceLogo";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -69,6 +69,17 @@ export default function ChatBot() {
   const [intakeStep, setIntakeStep] = useState(0);
   const [intake, setIntake] = useState({});
   const [intakeFreeText, setIntakeFreeText] = useState("");
+  
+  // Voice & Media controls
+  const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [voiceActive, setVoiceActive] = useState(false);
+  const [cameraActive, setCameraActive] = useState(false);
+  const [aiSpeaking, setAiSpeaking] = useState(false);
+  const [viewTab, setViewTab] = useState("chat"); // chat | voice | camera
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
+  const recognitionRef = useRef(null);
 
   const [messages, setMessages] = useState([
     {
@@ -101,6 +112,141 @@ export default function ChatBot() {
     origY: 0,
     moved: false,
   });
+
+  // Initialize Web Speech API
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = true;
+      recognitionRef.current.lang = "en-US";
+
+      recognitionRef.current.onstart = () => {
+        setIsListening(true);
+      };
+
+      recognitionRef.current.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current.onresult = (event) => {
+        let interimTranscript = "";
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i].transcript;
+          if (event.results[i].isFinal) {
+            if (transcript.trim()) {
+              send(transcript.trim());
+            }
+          } else {
+            interimTranscript += transcript;
+          }
+        }
+      };
+
+      recognitionRef.current.onerror = (event) => {
+        console.error("Speech recognition error", event.error);
+        setIsListening(false);
+      };
+    }
+  }, []);
+
+  // Voice control function
+  const startVoiceChat = () => {
+    if (recognitionRef.current && !isListening) {
+      recognitionRef.current.start();
+      setVoiceActive(true);
+    }
+  };
+
+  const stopVoiceChat = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.abort();
+      setVoiceActive(false);
+      setIsListening(false);
+    }
+  };
+
+  // Text-to-Speech function
+  const speakMessage = (text) => {
+    if ("speechSynthesis" in window && voiceEnabled) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1;
+      utterance.pitch = 1;
+      utterance.volume = 1;
+      
+      utterance.onstart = () => setAiSpeaking(true);
+      utterance.onend = () => setAiSpeaking(false);
+      utterance.onerror = () => setAiSpeaking(false);
+      
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
+  // Camera control
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+      setCameraActive(true);
+    } catch (err) {
+      console.error("Camera error:", err);
+      setCameraActive(false);
+    }
+  };
+
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+    setCameraActive(false);
+  };
+
+  // Sandbox mode - AI can control screen
+  const [sandboxMode, setSandboxMode] = useState(false);
+  const [aiCommands, setAiCommands] = useState([]);
+
+  const toggleSandboxMode = () => {
+    setSandboxMode(!sandboxMode);
+    if (!sandboxMode) {
+      setAiCommands([]);
+    }
+  };
+
+  // AI Screen Control (Sandbox Mode)
+  const executeAiCommand = (command) => {
+    if (!sandboxMode) return;
+    
+    const cmd = command.toLowerCase();
+    setAiCommands(prev => [...prev, { command: cmd, timestamp: Date.now() }]);
+    
+    // Simulate AI screen control
+    if (cmd.includes('scroll')) {
+      window.scrollBy({ top: 100, behavior: 'smooth' });
+    } else if (cmd.includes('zoom')) {
+      // Note: Actual zoom control would require more complex implementation
+      console.log('AI attempting zoom control');
+    } else if (cmd.includes('navigate')) {
+      // Note: Navigation would require routing integration
+      console.log('AI attempting navigation');
+    }
+  };
+
+  // Cleanup
+  useEffect(() => {
+    return () => {
+      stopVoiceChat();
+      stopCamera();
+      window.speechSynthesis.cancel();
+    };
+  }, []);
 
   // Keep within viewport on resize
   useEffect(() => {
@@ -183,21 +329,34 @@ export default function ChatBot() {
     setMessages((m) => [...m, { role: "user", content: msg }]);
     setInput("");
     setLoading(true);
+
+    // Execute AI commands in sandbox mode
+    if (sandboxMode) {
+      executeAiCommand(msg);
+    }
+
     try {
       const res = await axios.post(`${API}/chat`, {
         session_id: sessionId.current,
         message: msg,
       });
-      setMessages((m) => [...m, { role: "assistant", content: res.data.reply }]);
+      const aiResponse = res.data.reply;
+      setMessages((m) => [...m, { role: "assistant", content: aiResponse }]);
+      
+      // Speak AI response if voice is enabled
+      if (voiceEnabled) {
+        speakMessage(aiResponse);
+      }
     } catch (err) {
       const detail = err?.response?.data?.detail;
+      const errorMsg =
+        "// transmission failed — " +
+        (typeof detail === "string" ? detail : "channel disrupted, retry shortly.");
       setMessages((m) => [
         ...m,
         {
           role: "assistant",
-          content:
-            "// transmission failed — " +
-            (typeof detail === "string" ? detail : "channel disrupted, retry shortly."),
+          content: errorMsg,
           error: true,
         },
       ]);
@@ -336,12 +495,13 @@ export default function ChatBot() {
         <span className="absolute -inset-2 rounded-full bg-[#00E5FF] opacity-25 blur-2xl group-hover:opacity-50 transition-opacity pointer-events-none" />
         <span className="relative flex items-center gap-2.5 pl-2 pr-4 py-1.5 rounded-full border border-[#00E5FF]/60 bg-[#020617]/90 backdrop-blur-xl text-[#00E5FF] hover:bg-[#00E5FF]/10 transition-colors pointer-events-none">
           <span className="relative">
-            <AiFaceLogo size={40} speaking={loading} listening={open && !loading} />
+            <AiFaceLogo size={40} speaking={aiSpeaking} listening={isListening && !aiSpeaking} />
             <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-[#39FF14] blink shadow-[0_0_10px_#39FF14]" />
           </span>
           <span className="font-mono text-[11px] tracking-[0.22em] uppercase">
             {open ? "Close" : "Atlas Vex"}
           </span>
+          {isListening && <span className="w-1.5 h-1.5 rounded-full bg-[#39FF14] blink" />}
           <span
             className="ml-1 font-mono text-[9px] tracking-[0.3em] text-slate-500 hidden sm:inline"
             title="Drag to move"
@@ -368,11 +528,11 @@ export default function ChatBot() {
             data-testid="chatbot-panel"
           >
             <div className="px-5 py-4 border-b border-zinc-800 flex items-center justify-between">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 flex-1">
                 <span className="relative w-10 h-10 flex items-center justify-center">
-                  <AiFaceLogo size={40} speaking={loading} listening={!loading} />
+                  <AiFaceLogo size={40} speaking={aiSpeaking} listening={isListening && !aiSpeaking} />
                 </span>
-                <div>
+                <div className="flex-1">
                   <div className="font-display text-[#F8FAFC] text-sm tracking-tight">
                     Atlas Vex
                   </div>
@@ -381,112 +541,328 @@ export default function ChatBot() {
                   </div>
                 </div>
               </div>
-              <button
-                onClick={() => setOpen(false)}
-                data-testid="chatbot-close"
-                className="text-slate-500 hover:text-[#F8FAFC] p-1"
-                aria-label="Close chat"
-              >
-                <X size={18} />
-              </button>
-            </div>
 
-            <div
-              ref={scrollRef}
-              className="flex-1 overflow-y-auto p-5 space-y-4 no-scrollbar"
-              data-testid="chatbot-messages"
-            >
-              {messages.map((m, i) => (
-                <div
-                  key={i}
-                  className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
+              {/* Voice & Audio Controls */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setVoiceEnabled(!voiceEnabled)}
+                  title={voiceEnabled ? "Disable voice output" : "Enable voice output"}
+                  className={`p-2 rounded-lg transition-colors ${
+                    voiceEnabled ? "text-[#39FF14] bg-[#39FF14]/10" : "text-slate-500 hover:text-slate-300"
+                  }`}
                 >
-                  <div
-                    className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
-                      m.role === "user"
-                        ? "bg-[#00E5FF]/10 border border-[#00E5FF]/30 text-[#F8FAFC]"
-                        : m.error
-                        ? "bg-[#FF003C]/10 border border-[#FF003C]/30 text-[#FF6B86]"
-                        : m.success
-                        ? "bg-[#39FF14]/10 border border-[#39FF14]/30 text-slate-100"
-                        : "bg-zinc-950/60 border border-zinc-800 text-slate-200"
+                  {voiceEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
+                </button>
+
+                {voiceEnabled && (
+                  <button
+                    onClick={voiceActive ? stopVoiceChat : startVoiceChat}
+                    title={voiceActive ? "Stop listening" : "Start voice input"}
+                    className={`p-2 rounded-lg transition-colors ${
+                      voiceActive
+                        ? "text-[#FF003C] bg-[#FF003C]/10 blink"
+                        : "text-[#00E5FF] bg-[#00E5FF]/10 hover:bg-[#00E5FF]/20"
                     }`}
                   >
-                    {m.success && (
-                      <CheckCircle2
-                        size={14}
-                        className="text-[#39FF14] inline mr-2 -mt-0.5"
-                      />
-                    )}
-                    {m.content}
-                  </div>
-                </div>
-              ))}
-              {loading && (
-                <div className="flex justify-start">
-                  <div className="rounded-2xl px-4 py-3 bg-zinc-950/60 border border-zinc-800 text-slate-400 text-sm font-mono tracking-wider">
-                    <span className="inline-flex gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#00E5FF] blink" />
-                      <span
-                        className="w-1.5 h-1.5 rounded-full bg-[#00E5FF] blink"
-                        style={{ animationDelay: "0.2s" }}
-                      />
-                      <span
-                        className="w-1.5 h-1.5 rounded-full bg-[#00E5FF] blink"
-                        style={{ animationDelay: "0.4s" }}
-                      />
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {/* Intake choice chips */}
-              {mode === "intake" && !loading && INTAKE_STEPS[intakeStep] && !INTAKE_STEPS[intakeStep].free && (
-                <div className="flex flex-wrap gap-2 pt-1" data-testid="intake-options">
-                  {INTAKE_STEPS[intakeStep].options.map((opt) => (
-                    <button
-                      key={opt}
-                      onClick={() => handleIntakeChoice(opt)}
-                      data-testid={`intake-option-${INTAKE_STEPS[intakeStep].key}-${opt.slice(0, 6)}`}
-                      className="font-mono text-[10px] tracking-[0.15em] uppercase text-slate-200 border border-zinc-700 hover:border-[#00E5FF] hover:text-[#00E5FF] rounded-full px-3 py-1.5 transition-colors bg-zinc-950/50"
-                    >
-                      {opt}
-                    </button>
-                  ))}
-                  <button
-                    onClick={cancelIntake}
-                    className="font-mono text-[10px] tracking-[0.15em] uppercase text-slate-500 hover:text-[#FF003C] px-3 py-1.5"
-                  >
-                    abort
+                    {voiceActive ? <MicOff size={16} /> : <Mic size={16} />}
                   </button>
-                </div>
-              )}
+                )}
+
+                {/* Sandbox Mode Toggle */}
+                <button
+                  onClick={toggleSandboxMode}
+                  title={sandboxMode ? "Disable AI screen control" : "Enable AI screen control (Sandbox)"}
+                  className={`p-2 rounded-lg transition-colors font-mono text-xs tracking-wider ${
+                    sandboxMode
+                      ? "text-[#FF6B35] bg-[#FF6B35]/10 border border-[#FF6B35]/50"
+                      : "text-slate-500 hover:text-slate-300 border border-transparent"
+                  }`}
+                >
+                  {sandboxMode ? "SANDBOX" : "SAFE"}
+                </button>
+
+                <button
+                  onClick={() => setOpen(false)}
+                  data-testid="chatbot-close"
+                  className="text-slate-500 hover:text-[#F8FAFC] p-2"
+                  aria-label="Close chat"
+                >
+                  <X size={18} />
+                </button>
+              </div>
             </div>
 
-            {/* Suggestions (only in chat mode + first turn) */}
-            {mode === "chat" && messages.length <= 1 && !loading && (
-              <div className="px-5 pb-3 flex flex-wrap gap-2">
+            {/* View Tabs */}
+            <div className="px-5 py-3 border-b border-zinc-800 flex gap-2">
+              {["chat", "voice", "camera"].map((tab) => (
                 <button
-                  onClick={startIntake}
-                  data-testid="chatbot-start-intake"
-                  className="font-mono text-[10px] tracking-[0.15em] uppercase text-[#39FF14] border border-[#39FF14]/40 bg-[#39FF14]/10 rounded-full px-3 py-1.5 hover:bg-[#39FF14]/20 inline-flex items-center gap-1.5 transition-colors"
+                  key={tab}
+                  onClick={() => setViewTab(tab)}
+                  className={`capitalize font-mono text-xs tracking-[0.15em] px-3 py-1.5 rounded-full transition-colors ${
+                    viewTab === tab
+                      ? "bg-[#00E5FF]/20 text-[#00E5FF] border border-[#00E5FF]/50"
+                      : "bg-zinc-950/50 text-slate-400 border border-zinc-800 hover:border-[#00E5FF]/30"
+                  }`}
                 >
-                  <Briefcase size={11} /> Start Engagement Intake
+                  {tab === "chat" && "Chat"}
+                  {tab === "voice" && "Voice"}
+                  {tab === "camera" && "Camera"}
                 </button>
-                {SUGGESTIONS.map((s) => (
+              ))}
+            </div>
+
+            {/* Content Area */}
+            {viewTab === "chat" && (
+              <>
+                <div
+                  ref={scrollRef}
+                  className="flex-1 overflow-y-auto p-5 space-y-4 no-scrollbar"
+                  data-testid="chatbot-messages"
+                >
+                  {messages.map((m, i) => (
+                    <div
+                      key={i}
+                      className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
+                    >
+                      <div
+                        className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
+                          m.role === "user"
+                            ? "bg-[#00E5FF]/10 border border-[#00E5FF]/30 text-[#F8FAFC]"
+                            : m.error
+                            ? "bg-[#FF003C]/10 border border-[#FF003C]/30 text-[#FF6B86]"
+                            : m.success
+                            ? "bg-[#39FF14]/10 border border-[#39FF14]/30 text-slate-100"
+                            : "bg-zinc-950/60 border border-zinc-800 text-slate-200"
+                        }`}
+                      >
+                        {m.success && (
+                          <CheckCircle2
+                            size={14}
+                            className="text-[#39FF14] inline mr-2 -mt-0.5"
+                          />
+                        )}
+                        {m.content}
+                      </div>
+                    </div>
+                  ))}
+                  {loading && (
+                    <div className="flex justify-start">
+                      <div className="rounded-2xl px-4 py-3 bg-zinc-950/60 border border-zinc-800 text-slate-400 text-sm font-mono tracking-wider">
+                        <span className="inline-flex gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#00E5FF] blink" />
+                          <span
+                            className="w-1.5 h-1.5 rounded-full bg-[#00E5FF] blink"
+                            style={{ animationDelay: "0.2s" }}
+                          />
+                          <span
+                            className="w-1.5 h-1.5 rounded-full bg-[#00E5FF] blink"
+                            style={{ animationDelay: "0.4s" }}
+                          />
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Intake choice chips */}
+                  {mode === "intake" && !loading && INTAKE_STEPS[intakeStep] && !INTAKE_STEPS[intakeStep].free && (
+                    <div className="flex flex-wrap gap-2 pt-1" data-testid="intake-options">
+                      {INTAKE_STEPS[intakeStep].options.map((opt) => (
+                        <button
+                          key={opt}
+                          onClick={() => handleIntakeChoice(opt)}
+                          data-testid={`intake-option-${INTAKE_STEPS[intakeStep].key}-${opt.slice(0, 6)}`}
+                          className="font-mono text-[10px] tracking-[0.15em] uppercase text-slate-200 border border-zinc-700 hover:border-[#00E5FF] hover:text-[#00E5FF] rounded-full px-3 py-1.5 transition-colors bg-zinc-950/50"
+                        >
+                          {opt}
+                        </button>
+                      ))}
+                      <button
+                        onClick={cancelIntake}
+                        className="font-mono text-[10px] tracking-[0.15em] uppercase text-slate-500 hover:text-[#FF003C] px-3 py-1.5"
+                      >
+                        abort
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Suggestions */}
+                {mode === "chat" && messages.length <= 1 && !loading && (
+                  <div className="px-5 pb-3 flex flex-wrap gap-2">
+                    <button
+                      onClick={startIntake}
+                      data-testid="chatbot-start-intake"
+                      className="font-mono text-[10px] tracking-[0.15em] uppercase text-[#39FF14] border border-[#39FF14]/40 bg-[#39FF14]/10 rounded-full px-3 py-1.5 hover:bg-[#39FF14]/20 inline-flex items-center gap-1.5 transition-colors"
+                    >
+                      <Briefcase size={11} /> Start Engagement Intake
+                    </button>
+                    {SUGGESTIONS.map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => send(s)}
+                        data-testid={`chatbot-suggestion-${s.slice(0, 8)}`}
+                        className="font-mono text-[10px] tracking-[0.15em] uppercase text-slate-300 border border-zinc-800 rounded-full px-3 py-1.5 hover:border-[#00E5FF]/60 hover:text-[#00E5FF] transition-colors"
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Voice View */}
+            {viewTab === "voice" && (
+              <div className="flex-1 p-5 flex flex-col items-center justify-center gap-4">
+                <div className="text-center">
+                  <div className="font-mono text-sm text-slate-300 mb-4">
+                    Voice Chat Mode
+                  </div>
                   <button
-                    key={s}
-                    onClick={() => send(s)}
-                    data-testid={`chatbot-suggestion-${s.slice(0, 8)}`}
-                    className="font-mono text-[10px] tracking-[0.15em] uppercase text-slate-300 border border-zinc-800 rounded-full px-3 py-1.5 hover:border-[#00E5FF]/60 hover:text-[#00E5FF] transition-colors"
+                    onClick={voiceActive ? stopVoiceChat : startVoiceChat}
+                    className={`w-24 h-24 rounded-full transition-all flex items-center justify-center font-mono text-sm tracking-wider ${
+                      voiceActive
+                        ? "bg-[#FF003C]/20 border-2 border-[#FF003C] text-[#FF003C] blink"
+                        : "bg-[#00E5FF]/10 border-2 border-[#00E5FF] text-[#00E5FF] hover:bg-[#00E5FF]/20"
+                    }`}
                   >
-                    {s}
+                    {voiceActive ? <MicOff size={32} /> : <Mic size={32} />}
                   </button>
-                ))}
+                  <div className="mt-4 font-mono text-xs text-slate-500">
+                    {isListening ? (
+                      <>
+                        <span className="text-[#39FF14]">● </span>
+                        Listening...
+                      </>
+                    ) : voiceActive ? (
+                      <>
+                        <span className="text-slate-400">● </span>
+                        Ready
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-slate-600">● </span>
+                        Offline
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Sandbox Mode Controls */}
+                {sandboxMode && (
+                  <div className="w-full border-t border-zinc-800 pt-4 mt-4">
+                    <div className="text-xs text-slate-500 mb-3 font-mono tracking-wider">
+                      AI SCREEN CONTROL · SANDBOX MODE
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 mb-4">
+                      <button
+                        onClick={() => executeAiCommand("scroll down")}
+                        className="p-2 bg-zinc-800 hover:bg-zinc-700 text-slate-300 font-mono text-xs rounded transition-colors"
+                      >
+                        Scroll Down
+                      </button>
+                      <button
+                        onClick={() => executeAiCommand("scroll up")}
+                        className="p-2 bg-zinc-800 hover:bg-zinc-700 text-slate-300 font-mono text-xs rounded transition-colors"
+                      >
+                        Scroll Up
+                      </button>
+                      <button
+                        onClick={() => executeAiCommand("zoom in")}
+                        className="p-2 bg-zinc-800 hover:bg-zinc-700 text-slate-300 font-mono text-xs rounded transition-colors"
+                      >
+                        Zoom In
+                      </button>
+                      <button
+                        onClick={() => executeAiCommand("navigate home")}
+                        className="p-2 bg-zinc-800 hover:bg-zinc-700 text-slate-300 font-mono text-xs rounded transition-colors"
+                      >
+                        Navigate
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <div className="w-full border-t border-zinc-800 pt-4 mt-4">
+                  <div className="text-xs text-slate-500 mb-3">Recent messages</div>
+                  <div className="space-y-2 max-h-32 overflow-y-auto">
+                    {messages.slice(-3).map((m, i) => (
+                      <div
+                        key={i}
+                        className={`text-xs p-2 rounded border ${
+                          m.role === "user"
+                            ? "border-[#00E5FF]/30 bg-[#00E5FF]/5 text-slate-300"
+                            : "border-zinc-800 bg-zinc-950 text-slate-400"
+                        }`}
+                      >
+                        {m.content.slice(0, 100)}
+                        {m.content.length > 100 ? "..." : ""}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* AI Commands History */}
+                  {aiCommands.length > 0 && (
+                    <div className="mt-4">
+                      <div className="text-xs text-[#FF6B35] mb-2 font-mono tracking-wider">
+                        AI COMMANDS EXECUTED
+                      </div>
+                      <div className="space-y-1 max-h-20 overflow-y-auto">
+                        {aiCommands.slice(-5).map((cmd, i) => (
+                          <div key={i} className="text-xs text-slate-500 font-mono">
+                            {new Date(cmd.timestamp).toLocaleTimeString()}: {cmd.command}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
-            {/* Input */}
+            {/* Camera View */}
+            {viewTab === "camera" && (
+              <div className="flex-1 p-5 flex flex-col items-center justify-center gap-4 bg-zinc-950">
+                {cameraActive ? (
+                  <div className="relative w-full h-full rounded-2xl overflow-hidden bg-black">
+                    <video
+                      ref={videoRef}
+                      autoPlay
+                      playsInline
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute bottom-4 left-4 font-mono text-xs text-[#39FF14]">
+                      ● Live
+                    </div>
+                    <div className="absolute bottom-4 right-4 flex gap-2">
+                      <button
+                        onClick={stopCamera}
+                        className="p-3 rounded-full bg-[#FF003C]/20 border border-[#FF003C] text-[#FF003C] hover:bg-[#FF003C]/30 transition-colors"
+                        title="Stop Camera"
+                      >
+                        <Video size={16} />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center">
+                    <Camera size={48} className="mx-auto mb-4 text-slate-500" />
+                    <div className="font-mono text-sm text-slate-300 mb-4">
+                      Camera Access
+                    </div>
+                    <button
+                      onClick={startCamera}
+                      className="px-6 py-3 rounded-full bg-[#00E5FF]/10 border border-[#00E5FF] text-[#00E5FF] hover:bg-[#00E5FF]/20 transition-colors font-mono text-sm tracking-wider"
+                    >
+                      Enable Camera
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Input - Chat View Only */}
+            {viewTab === "chat" && (
             <div className="p-4 border-t border-zinc-800">
               {mode === "intake" && INTAKE_STEPS[intakeStep]?.free ? (
                 <div className="flex items-end gap-2">
