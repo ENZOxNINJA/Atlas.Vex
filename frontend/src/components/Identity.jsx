@@ -75,7 +75,7 @@ export default function Identity() {
                   {PROFILE.name}
                 </div>
                 <div className="font-mono text-xs text-slate-400 mt-1">
-                  alias: <span className="text-[#39FF14]">@jakethevex</span>
+                  alias: <span className="text-[#39FF14]">@mrmarvel</span>
                 </div>
               </div>
               {/* corner brackets */}
