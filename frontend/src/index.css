@@ -114,3 +114,53 @@ body {
 
 @keyframes blink { 0%,100% { opacity: 1 } 50% { opacity: 0.2 } }
 .blink { animation: blink 1.4s infinite; }
+
+/* ---------- A11y: keyboard focus visibility ---------- */
+:focus { outline: none; }
+:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+button:focus-visible, a:focus-visible {
+  box-shadow: 0 0 0 2px rgba(0, 229, 255, 0.55);
+}
+input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: none;
+  border-color: var(--cyan) !important;
+  box-shadow: 0 0 0 2px rgba(0, 229, 255, 0.35);
+}
+
+/* ---------- A11y: skip-to-content link ---------- */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 1rem;
+  z-index: 100;
+  padding: 0.6rem 1rem;
+  background: var(--cyan);
+  color: #020617;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  border-radius: 2px;
+  font-weight: 600;
+}
+.skip-link:focus, .skip-link:focus-visible {
+  left: 1rem;
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+/* ---------- A11y: respect prefers-reduced-motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .blink { animation: none !important; opacity: 1 !important; }
+  .btn-cta:hover, .btn-ghost:hover { transform: none !important; }
+}

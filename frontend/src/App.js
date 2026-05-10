@@ -1,5 +1,6 @@
 import "./App.css";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { MotionConfig } from "framer-motion";
 import Portfolio from "./components/Portfolio";
 import ProjectDetail from "./components/ProjectDetail";
 import ChatBot from "./components/ChatBot";
@@ -22,17 +23,19 @@ function LogoIntroMount() {
 
 function App() {
   return (
-    <div className="App">
-      <LogoIntroMount />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Portfolio />} />
-          <Route path="/projects/:id" element={<ProjectDetail />} />
-          <Route path="/admin" element={<AdminInbox />} />
-        </Routes>
-        <ChatBotMount />
-      </BrowserRouter>
-    </div>
+    <MotionConfig reducedMotion="user">
+      <div className="App">
+        <LogoIntroMount />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Portfolio />} />
+            <Route path="/projects/:id" element={<ProjectDetail />} />
+            <Route path="/admin" element={<AdminInbox />} />
+          </Routes>
+          <ChatBotMount />
+        </BrowserRouter>
+      </div>
+    </MotionConfig>
   );
 }
 

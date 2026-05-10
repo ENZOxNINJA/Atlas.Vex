@@ -199,14 +199,15 @@ function CopyBtn({ text }) {
       }}
       className="inline-flex items-center gap-1 text-[10px] font-mono text-slate-500 hover:text-cyan transition-colors"
       title="Copy"
+      aria-label={`Copy ${text}`}
     >
       {done ? (
         <>
-          <CheckCircle2 className="w-3 h-3 text-green" /> copied
+          <CheckCircle2 className="w-3 h-3 text-green" aria-hidden="true" /> copied
         </>
       ) : (
         <>
-          <Copy className="w-3 h-3" /> copy
+          <Copy className="w-3 h-3" aria-hidden="true" /> copy
         </>
       )}
     </button>
@@ -417,9 +418,9 @@ function Dashboard({ token, onLogout }) {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-7xl mx-auto px-6 py-8" role="main">
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-8" aria-label="Inbox statistics">
           <StatCard icon={Inbox} label="Contacts" value={stats?.contacts} color="cyan" />
           <StatCard icon={Briefcase} label="Intake" value={stats?.intakes} color="amber" />
           <StatCard icon={Send} label="Newsletter" value={stats?.newsletter} color="green" />
@@ -438,7 +439,7 @@ function Dashboard({ token, onLogout }) {
         </div>
 
         {/* Tabs */}
-        <div className="flex items-center gap-2 mb-4 flex-wrap">
+        <div className="flex items-center gap-2 mb-4 flex-wrap" role="tablist" aria-label="Inbox channels">
           {TABS.map((t) => {
             const Icon = t.icon;
             const active = tab === t.id;
@@ -446,13 +447,17 @@ function Dashboard({ token, onLogout }) {
               <button
                 key={t.id}
                 onClick={() => setTab(t.id)}
+                role="tab"
+                aria-selected={active}
+                aria-controls={`panel-${t.id}`}
+                id={`tab-${t.id}`}
                 className={`inline-flex items-center gap-2 px-4 py-2 rounded-sm border font-mono text-xs uppercase tracking-[0.18em] transition-colors ${
                   active
                     ? "border-cyan text-cyan bg-cyan/5"
                     : "border-zinc-800 text-slate-400 hover:border-zinc-700 hover:text-slate-200"
                 }`}
               >
-                <Icon className="w-3 h-3" /> {t.label}
+                <Icon className="w-3 h-3" aria-hidden="true" /> {t.label}
               </button>
             );
           })}
@@ -461,8 +466,10 @@ function Dashboard({ token, onLogout }) {
         {/* Toolbar */}
         <div className="flex items-center gap-2 mb-4 flex-wrap">
           <div className="relative flex-1 min-w-[200px]">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" aria-hidden="true" />
+            <label htmlFor="inbox-search" className="sr-only">Filter transmissions</label>
             <input
+              id="inbox-search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Filter transmissions..."
@@ -476,16 +483,18 @@ function Dashboard({ token, onLogout }) {
             }}
             className="btn-ghost text-xs"
             disabled={loading}
+            aria-label="Refresh transmissions"
           >
-            <RefreshCw className={`w-3 h-3 ${loading ? "animate-spin" : ""}`} />
+            <RefreshCw className={`w-3 h-3 ${loading ? "animate-spin" : ""}`} aria-hidden="true" />
             Refresh
           </button>
           <button
             onClick={exportCSV}
             disabled={!filtered.length}
             className="btn-ghost text-xs disabled:opacity-40"
+            aria-label={`Export ${filtered.length} ${tab} as CSV`}
           >
-            <Download className="w-3 h-3" /> CSV ({filtered.length})
+            <Download className="w-3 h-3" aria-hidden="true" /> CSV ({filtered.length})
           </button>
         </div>
 
@@ -497,13 +506,15 @@ function Dashboard({ token, onLogout }) {
         )}
 
         {loading ? (
-          <div className="text-center py-20 text-slate-500 font-mono text-xs uppercase tracking-[0.22em]">
+          <div className="text-center py-20 text-slate-500 font-mono text-xs uppercase tracking-[0.22em]" role="status" aria-live="polite">
             Decrypting transmissions...
           </div>
         ) : filtered.length === 0 ? (
-          <Inbox404 />
+          <div role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`}>
+            <Inbox404 />
+          </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-2" role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`}>
             {tab === "contacts" &&
               filtered.map((r) => <ContactRow key={r.id || r.timestamp} row={r} />)}
             {tab === "intake" &&

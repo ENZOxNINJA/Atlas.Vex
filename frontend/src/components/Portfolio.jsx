@@ -19,8 +19,9 @@ import Footer from "./Footer";
 export default function Portfolio() {
   return (
     <div className="min-h-screen bg-[#020617] text-slate-200" data-testid="portfolio-root">
+      <a href="#main" className="skip-link">Skip to content</a>
       <Nav />
-      <main>
+      <main id="main" tabIndex={-1}>
         <Hero />
         <Identity />
         <Skills />

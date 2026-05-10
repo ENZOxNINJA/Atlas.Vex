@@ -319,10 +319,17 @@ export default function ChatBot() {
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setOpen((v) => !v);
+          }
+        }}
         data-testid="chatbot-toggle"
         role="button"
         tabIndex={0}
-        aria-label="Open Atlas Vex chat (drag to move)"
+        aria-label={open ? "Close Atlas Vex chat" : "Open Atlas Vex chat (drag to move)"}
+        aria-expanded={open}
         style={{ left: pos.x, top: pos.y, touchAction: "none" }}
         className="fixed z-[60] group cursor-grab active:cursor-grabbing select-none"
       >
