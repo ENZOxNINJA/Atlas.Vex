@@ -43,6 +43,9 @@ export const PROJECTS = [
     summary: "Distributed AI swarm orchestration framework.",
     description:
       "Multi-agent execution mesh with elastic scheduling, circuit-breakers, and signed inter-agent messaging. Designed for offline-first autonomous operations and zero-downtime fleet upgrades.",
+    impact: "Sustains 99.98% sync across 12+ agent fleets",
+    status: "Production",
+    year: "2024 — Present",
     stack: ["Next.js", "Rust", "Agents", "Kubernetes"],
     repo: "https://github.com/ENZOxNINJA",
     image:
@@ -56,6 +59,9 @@ export const PROJECTS = [
     summary: "Persistent autonomous memory infrastructure.",
     description:
       "Vector + graph memory layer with provenance, lineage, and audit-grade retrieval. Powers long-horizon reasoning for autonomous agents across production workloads.",
+    impact: "Sub-100ms recall · audit-grade lineage",
+    status: "Active",
+    year: "2024 — Present",
     stack: ["Postgres", "Vector DB", "LLM"],
     repo: "https://github.com/AtlasTheDev123",
     image:
@@ -69,6 +75,9 @@ export const PROJECTS = [
     summary: "Adaptive DevSecOps execution layer.",
     description:
       "Continuous threat-modeling pipeline with autonomous remediation playbooks, supply-chain attestations, and zero-trust workload identity at runtime.",
+    impact: "Zero-trust runtime · auto-remediation playbooks",
+    status: "Research",
+    year: "2025 — Present",
     stack: ["Docker", "Cloud", "Zero Trust"],
     repo: "https://github.com/mrmarvel123",
     image:
@@ -86,10 +95,122 @@ export const METRICS = [
 
 export const NAV = [
   { id: "hero", label: "00 // Index" },
-  { id: "identity", label: "01 // Identity" },
-  { id: "skills", label: "02 // Skills" },
-  { id: "projects", label: "03 // Systems" },
-  { id: "mission", label: "04 // Mission" },
-  { id: "metrics", label: "05 // Telemetry" },
-  { id: "contact", label: "06 // Contact" },
+  { id: "identity", label: "01 // About" },
+  { id: "skills", label: "02 // Capabilities" },
+  { id: "stack", label: "03 // Stack" },
+  { id: "experience", label: "04 // Experience" },
+  { id: "projects", label: "05 // Systems" },
+  { id: "services", label: "06 // Engage" },
+  { id: "mission", label: "07 // Mission" },
+  { id: "metrics", label: "08 // Telemetry" },
+  { id: "contact", label: "09 // Contact" },
+];
+
+export const NOW = {
+  building: "LEGION CORE v0.4 — agent fleet auto-recovery",
+  reading: "Designing Data-Intensive Applications · Tanenbaum",
+  available: "Q3-Q4 2026 // Open to engagements",
+};
+
+export const STACK = [
+  {
+    category: "Languages",
+    items: ["TypeScript", "Python", "Rust", "Go", "C++", "Bash"],
+  },
+  {
+    category: "Frameworks",
+    items: ["React", "Next.js", "FastAPI", "Node.js", "Tailwind", "Three.js"],
+  },
+  {
+    category: "Infrastructure",
+    items: ["Kubernetes", "Docker", "Terraform", "AWS", "GCP", "PostgreSQL", "Redis", "MongoDB"],
+  },
+  {
+    category: "AI / Security",
+    items: [
+      "OpenAI",
+      "Anthropic",
+      "LangGraph",
+      "Vector DBs",
+      "Burp Suite",
+      "Wireshark",
+      "Zero Trust",
+      "OWASP",
+    ],
+  },
+];
+
+export const EXPERIENCE = [
+  {
+    period: "2024 — Present",
+    role: "Founder / Autonomous Systems Architect",
+    company: "ATLAS VEX (Independent)",
+    location: "Remote · Global",
+    highlights: [
+      "Designing the LEGION CORE multi-agent orchestration framework",
+      "Building ATLAS MEMORY — persistent autonomous memory infrastructure",
+      "Advising teams on AI-native infrastructure & adaptive DevSecOps",
+    ],
+    status: "active",
+  },
+  {
+    period: "2022 — 2024",
+    role: "Senior Software Engineer",
+    company: "Confidential",
+    location: "Remote",
+    highlights: [
+      "Led distributed-systems platform serving multi-region production traffic",
+      "Built CI/CD + supply-chain attestation pipelines (SLSA L3)",
+      "Mentored engineers on systems design and secure-by-default practices",
+    ],
+    status: "completed",
+  },
+  {
+    period: "2020 — 2022",
+    role: "Full-Stack Engineer · Security Research",
+    company: "Confidential",
+    location: "Hybrid",
+    highlights: [
+      "Shipped React + Node.js platforms at scale",
+      "Conducted offensive-security research on internal infra",
+      "Automated red-team tooling for continuous adversarial testing",
+    ],
+    status: "completed",
+  },
+  {
+    period: "2018 — 2020",
+    role: "Software Engineer",
+    company: "Confidential",
+    location: "On-site",
+    highlights: [
+      "Built backend services in Python, Go, and TypeScript",
+      "Delivered first ML-assisted automation features",
+      "Earned reputation for rigor in code review and architecture",
+    ],
+    status: "completed",
+  },
+];
+
+export const SERVICES = [
+  {
+    code: "ENG/01",
+    title: "Autonomous Systems Engineering",
+    body: "Design and ship multi-agent platforms — orchestration meshes, persistent memory, and durable execution. End-to-end from architecture to production.",
+    bullets: ["Agent fleet design", "LLM orchestration", "Eval + observability"],
+    accent: "#00E5FF",
+  },
+  {
+    code: "SEC/02",
+    title: "DevSecOps & Adversarial Hardening",
+    body: "Embed offensive-security thinking into your delivery pipeline. Threat modeling, supply-chain attestations, and zero-trust workload identity at runtime.",
+    bullets: ["Threat modeling", "Supply-chain (SLSA)", "Red-team automation"],
+    accent: "#39FF14",
+  },
+  {
+    code: "ARC/03",
+    title: "Systems Architecture & Advisory",
+    body: "Embedded technical advisory for AI-native products and infrastructure-heavy startups. Architecture reviews, hiring rubrics, code-quality standards.",
+    bullets: ["Architecture reviews", "Hiring rubrics", "Tech-strategy memos"],
+    accent: "#FFB000",
+  },
 ];

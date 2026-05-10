@@ -12,7 +12,7 @@ export default function Skills() {
       <div className="max-w-7xl mx-auto px-6 sm:px-8 md:px-12">
         <div className="flex items-center gap-3 mb-12">
           <span className="font-mono text-[11px] tracking-[0.3em] uppercase text-[#00E5FF]">
-            02 // Capabilities Matrix
+              02 // Capabilities Matrix
           </span>
           <div className="divider-x flex-1 max-w-[260px]" />
         </div>

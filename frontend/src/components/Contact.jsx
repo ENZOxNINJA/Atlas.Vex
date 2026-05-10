@@ -42,7 +42,7 @@ export default function Contact() {
       <div className="relative max-w-7xl mx-auto px-6 sm:px-8 md:px-12">
         <div className="flex items-center gap-3 mb-12">
           <span className="font-mono text-[11px] tracking-[0.3em] uppercase text-[#00E5FF]">
-            06 // Initialize Contact
+            09 // Initialize Contact
           </span>
           <div className="divider-x flex-1 max-w-[260px]" />
         </div>

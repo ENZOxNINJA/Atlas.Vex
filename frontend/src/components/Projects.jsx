@@ -15,7 +15,7 @@ export default function Projects() {
           <div>
             <div className="flex items-center gap-3 mb-6">
               <span className="font-mono text-[11px] tracking-[0.3em] uppercase text-[#00E5FF]">
-                03 // Featured Systems
+                05 // Featured Systems
               </span>
               <div className="divider-x flex-1 max-w-[180px]" />
             </div>
@@ -58,9 +58,15 @@ export default function Projects() {
                   Sys/{p.code}
                 </span>
                 <span
-                  className="absolute top-4 right-4 w-2 h-2 rounded-full"
-                  style={{ background: p.accent, boxShadow: `0 0 12px ${p.accent}` }}
-                />
+                  className="absolute top-4 right-4 font-mono text-[9px] tracking-[0.3em] uppercase border rounded-full px-2.5 py-1 backdrop-blur"
+                  style={{
+                    color: p.accent,
+                    borderColor: `${p.accent}55`,
+                    background: `${p.accent}10`,
+                  }}
+                >
+                  • {p.status}
+                </span>
               </div>
 
               <div className="p-7">
@@ -79,6 +85,19 @@ export default function Projects() {
                   {p.summary}
                 </div>
                 <p className="text-slate-400 text-sm leading-relaxed mt-4">{p.description}</p>
+
+                <div className="mt-5 flex items-center justify-between gap-3 flex-wrap">
+                  <div
+                    className="font-mono text-[10px] tracking-[0.22em] uppercase"
+                    style={{ color: p.accent }}
+                    data-testid={`project-${p.id}-impact`}
+                  >
+                    → {p.impact}
+                  </div>
+                  <div className="font-mono text-[10px] tracking-[0.22em] uppercase text-slate-500">
+                    {p.year}
+                  </div>
+                </div>
 
                 <div className="flex items-center gap-2 mt-5 font-mono text-[10px] tracking-[0.22em] uppercase text-slate-500 group-hover:text-[#00E5FF] transition-colors">
                   <span className="w-1 h-1 rounded-full bg-current" />

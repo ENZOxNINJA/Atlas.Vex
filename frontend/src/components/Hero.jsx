@@ -1,8 +1,8 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Download, Terminal } from "lucide-react";
+import { ArrowRight, Download, Terminal, Activity } from "lucide-react";
 import NeuralNetwork from "./NeuralNetwork";
-import { PROFILE } from "../data/portfolio";
+import { PROFILE, NOW } from "../data/portfolio";
 
 export default function Hero() {
   const scrollTo = (id) => {
@@ -124,6 +124,41 @@ export default function Hero() {
               <div className="font-display text-xl sm:text-2xl text-[#F8FAFC] mt-1">{s.v}</div>
             </div>
           ))}
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.75 }}
+          className="mt-16 rounded-2xl border border-zinc-800 bg-zinc-950/50 backdrop-blur-xl p-5 max-w-3xl"
+          data-testid="hero-now-strip"
+        >
+          <div className="flex items-center gap-3 mb-3">
+            <Activity size={14} className="text-[#39FF14]" />
+            <span className="font-mono text-[10px] tracking-[0.3em] uppercase text-[#39FF14]">
+              NOW · live status feed
+            </span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <div className="font-mono text-[9px] tracking-[0.3em] uppercase text-slate-500">
+                Building
+              </div>
+              <div className="text-[#F8FAFC] text-sm mt-1">{NOW.building}</div>
+            </div>
+            <div>
+              <div className="font-mono text-[9px] tracking-[0.3em] uppercase text-slate-500">
+                Reading
+              </div>
+              <div className="text-[#F8FAFC] text-sm mt-1">{NOW.reading}</div>
+            </div>
+            <div>
+              <div className="font-mono text-[9px] tracking-[0.3em] uppercase text-slate-500">
+                Availability
+              </div>
+              <div className="text-[#F8FAFC] text-sm mt-1">{NOW.available}</div>
+            </div>
+          </div>
         </motion.div>
       </div>
     </section>
