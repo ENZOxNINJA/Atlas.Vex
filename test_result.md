@@ -101,3 +101,149 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: "Analyze the repo and proceed with the default high-value improvement. Default chosen: build a secure Admin Inbox (token-gated dashboard for Contacts / Newsletter / Intake submissions) and migrate the deprecated FastAPI on_event shutdown handler to a lifespan context manager."
+
+backend:
+  - task: "Lifespan migration (replace @on_event shutdown)"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "low"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Replaced @app.on_event('shutdown') with @asynccontextmanager lifespan(app) wired via FastAPI(lifespan=...). Verifies via clean uvicorn startup logs."
+        - working: true
+          agent: "testing"
+          comment: "✅ VERIFIED: Lifespan migration working correctly. Backend logs show clean 'Application startup complete' and 'Application shutdown complete' messages with NO deprecation warnings about @on_event. The @asynccontextmanager lifespan handler is properly wired to FastAPI."
+
+  - task: "Admin token auth dependency (X-Admin-Token)"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Added require_admin dependency reading ADMIN_TOKEN from env. Returns 401 when token missing/wrong, 503 when ADMIN_TOKEN not configured. ADMIN_TOKEN currently set to 'atlasvex-admin-2026-change-me' in /app/backend/.env (also stored in /app/memory/test_credentials.md)."
+        - working: true
+          agent: "testing"
+          comment: "✅ VERIFIED: Admin auth dependency working perfectly. Tested GET /api/admin/verify: (1) Valid token → 200 {ok: true} ✓ (2) Wrong token → 401 ✓ (3) No X-Admin-Token header → 401 ✓. Also verified GET /api/admin/stats with valid token returns 200 with all required keys (contacts, newsletter, intakes, chat_messages, chat_sessions) ✓."
+
+  - task: "Gate GET /api/contact behind admin token"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Previously public — now protected by Depends(require_admin). POST /api/contact (form submission) remains public. Verify 401 without token and 200 with valid token."
+        - working: true
+          agent: "testing"
+          comment: "✅ VERIFIED: Contact endpoint gating working correctly. POST /api/contact (no token) → 201 with id/timestamp ✓. GET /api/contact (no token) → 401 ✓. GET /api/contact (valid token) → 200 list including newly created contact ✓. Public submission works, admin-only retrieval enforced."
+
+  - task: "GET /api/newsletter (admin)"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "New admin endpoint listing newsletter subscribers sorted by timestamp desc, max 1000."
+        - working: true
+          agent: "testing"
+          comment: "✅ VERIFIED: Newsletter admin endpoint working correctly. POST /api/newsletter (no token) → 201 with subscriber ✓. POST same email again → 201 idempotent (returns same id) ✓. GET /api/newsletter (no token) → 401 ✓. GET /api/newsletter (valid token) → 200 list including subscriber ✓."
+
+  - task: "GET /api/intake (admin)"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "New admin endpoint listing intake records, sorted desc, max 500."
+        - working: true
+          agent: "testing"
+          comment: "✅ VERIFIED: Intake admin endpoint working correctly. POST /api/intake (no token) with required fields → 201 ✓. GET /api/intake (no token) → 401 ✓. GET /api/intake (valid token) → 200 list including new intake ✓. BONUS: Verified intake was properly mirrored to contact_messages with subject 'Intake — {project_type}' ✓."
+
+  - task: "GET /api/admin/stats and /api/admin/verify"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "/admin/stats returns counts: contacts, newsletter, intakes, chat_messages, chat_sessions. /admin/verify is a lightweight ping used by the frontend to validate token. Both gated by require_admin."
+        - working: true
+          agent: "testing"
+          comment: "✅ VERIFIED: Both admin endpoints working correctly. GET /api/admin/verify with valid token → 200 {ok: true} ✓. GET /api/admin/stats with valid token → 200 with all required keys (contacts, newsletter, intakes, chat_messages, chat_sessions) ✓. Both properly gated by require_admin dependency."
+
+  - task: "Existing public endpoints still work (POST /contact, POST /newsletter, POST /intake, /telemetry, /chat, /github/repos, /chat/history)"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "No behavioral changes to existing public routes — only verifying refactor (lifespan + new imports) didn't break them."
+        - working: true
+          agent: "testing"
+          comment: "✅ VERIFIED: All public endpoints working correctly after refactor. GET /api/ → 200 {service:'ATLAS VEX', status:'online'} ✓. GET /api/telemetry → 200 list of 4 TelemetryPoint dicts ✓. GET /api/github/repos → 200 list ✓. POST /api/chat → 200 with reply field (LLM integration working) ✓. GET /api/chat/history/{session_id} → 200 with messages array ✓. No regressions from lifespan migration."
+
+frontend:
+  - task: "Admin Inbox page (/admin)"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/components/AdminInbox.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "New gated dashboard at /admin. LoginGate posts token to /api/admin/verify, persists in localStorage on success. Dashboard shows 5 stat cards + tabs (Contacts/Intake/Newsletter) with search filter, refresh, CSV export, and lock/logout. ChatBot and LogoIntro are hidden on /admin route."
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 2
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Admin token auth dependency (X-Admin-Token)"
+    - "Gate GET /api/contact behind admin token"
+    - "GET /api/newsletter (admin)"
+    - "GET /api/intake (admin)"
+    - "GET /api/admin/stats and /api/admin/verify"
+    - "Existing public endpoints still work (POST /contact, POST /newsletter, POST /intake, /telemetry, /chat, /github/repos, /chat/history)"
+    - "Lifespan migration (replace @on_event shutdown)"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+    - agent: "main"
+      message: "Default improvement implemented: token-gated Admin Inbox + FastAPI lifespan migration. Admin token is in /app/memory/test_credentials.md (atlasvex-admin-2026-change-me) and /app/backend/.env. Please test all backend endpoints — both new admin ones (with valid token, missing token=401, wrong token=401) and verify existing public flows (POST /contact, POST /newsletter, POST /intake, GET /telemetry, POST /chat, GET /chat/history/{sid}, GET /github/repos) still work without auth. Note: /api/contact GET is now admin-gated; POST /api/contact remains public."
+    - agent: "testing"
+      message: "✅ BACKEND TESTING COMPLETE - ALL TESTS PASSED (20/20). Comprehensive test suite executed covering: (1) Admin auth dependency with valid/wrong/missing tokens ✓ (2) Contact endpoint gating (POST public, GET admin-only) ✓ (3) Newsletter endpoints with idempotency ✓ (4) Intake endpoints with contact mirroring ✓ (5) Admin stats & verify endpoints ✓ (6) All public endpoints (root, telemetry, github, chat, chat history) ✓ (7) Lifespan migration verified via logs (no deprecation warnings) ✓. No critical issues found. Backend is production-ready."

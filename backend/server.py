@@ -1,4 +1,5 @@
-from fastapi import FastAPI, APIRouter, HTTPException
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, APIRouter, HTTPException, Header, Depends
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -7,7 +8,7 @@ import logging
 import httpx
 from pathlib import Path
 from pydantic import BaseModel, Field, EmailStr, ConfigDict
-from typing import List
+from typing import List, Optional
 import uuid
 from datetime import datetime, timezone
 
@@ -22,9 +23,28 @@ client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
 EMERGENT_LLM_KEY = os.environ.get('EMERGENT_LLM_KEY', '')
+ADMIN_TOKEN = os.environ.get('ADMIN_TOKEN', '')
 
-app = FastAPI(title="ATLAS VEX API")
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    # startup
+    yield
+    # shutdown
+    client.close()
+
+
+app = FastAPI(title="ATLAS VEX API", lifespan=lifespan)
 api_router = APIRouter(prefix="/api")
+
+
+# ---------- Admin auth dependency ----------
+async def require_admin(x_admin_token: Optional[str] = Header(default=None, alias="X-Admin-Token")):
+    if not ADMIN_TOKEN:
+        raise HTTPException(status_code=503, detail="Admin channel not configured")
+    if not x_admin_token or x_admin_token != ADMIN_TOKEN:
+        raise HTTPException(status_code=401, detail="Invalid admin token")
+    return True
 
 
 # ---------- Models ----------
@@ -161,7 +181,7 @@ async def create_contact(payload: ContactMessageCreate):
     return obj
 
 
-@api_router.get("/contact", response_model=List[ContactMessage])
+@api_router.get("/contact", response_model=List[ContactMessage], dependencies=[Depends(require_admin)])
 async def list_contacts():
     items = await db.contact_messages.find({}, {"_id": 0}).sort("timestamp", -1).to_list(500)
     for it in items:
@@ -333,6 +353,47 @@ async def github_repos():
     return result
 
 
+# ---------- Admin-only inboxes ----------
+@api_router.get("/newsletter", response_model=List[NewsletterSubscriber], dependencies=[Depends(require_admin)])
+async def list_newsletter():
+    items = await db.newsletter_subs.find({}, {"_id": 0}).sort("timestamp", -1).to_list(1000)
+    for it in items:
+        if isinstance(it.get('timestamp'), str):
+            it['timestamp'] = datetime.fromisoformat(it['timestamp'])
+    return items
+
+
+@api_router.get("/intake", response_model=List[IntakeRecord], dependencies=[Depends(require_admin)])
+async def list_intake():
+    items = await db.intake_records.find({}, {"_id": 0}).sort("timestamp", -1).to_list(500)
+    for it in items:
+        if isinstance(it.get('timestamp'), str):
+            it['timestamp'] = datetime.fromisoformat(it['timestamp'])
+    return items
+
+
+@api_router.get("/admin/stats", dependencies=[Depends(require_admin)])
+async def admin_stats():
+    contacts = await db.contact_messages.count_documents({})
+    subs = await db.newsletter_subs.count_documents({})
+    intakes = await db.intake_records.count_documents({})
+    chats = await db.chat_messages.count_documents({})
+    sessions = len(await db.chat_messages.distinct("session_id"))
+    return {
+        "contacts": contacts,
+        "newsletter": subs,
+        "intakes": intakes,
+        "chat_messages": chats,
+        "chat_sessions": sessions,
+    }
+
+
+@api_router.get("/admin/verify", dependencies=[Depends(require_admin)])
+async def admin_verify():
+    """Lightweight ping to validate an admin token from the UI."""
+    return {"ok": True}
+
+
 app.include_router(api_router)
 
 app.add_middleware(
@@ -348,8 +409,3 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
-
-
-@app.on_event("shutdown")
-async def shutdown_db_client():
-    client.close()
