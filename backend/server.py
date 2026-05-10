@@ -68,6 +68,7 @@ class ContactMessage(BaseModel):
     email: EmailStr
     message: str
     subject: str | None = None
+    read: bool = False
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
@@ -87,6 +88,7 @@ class NewsletterSubscriber(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     email: EmailStr
     source: str | None = "atlasvex-portfolio"
+    read: bool = False
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
@@ -115,7 +117,13 @@ class IntakeRecord(BaseModel):
     name: str | None = None
     email: EmailStr | None = None
     notes: str | None = None
+    read: bool = False
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class InboxPatch(BaseModel):
+    """Body for PATCH /api/{contact|newsletter|intake}/{id}"""
+    read: bool | None = None
 
 
 class ChatMessageOut(BaseModel):
@@ -387,14 +395,20 @@ async def list_intake():
 @api_router.get("/admin/stats", dependencies=[Depends(require_admin)])
 async def admin_stats():
     contacts = await db.contact_messages.count_documents({})
+    contacts_unread = await db.contact_messages.count_documents({"read": {"$ne": True}})
     subs = await db.newsletter_subs.count_documents({})
+    subs_unread = await db.newsletter_subs.count_documents({"read": {"$ne": True}})
     intakes = await db.intake_records.count_documents({})
+    intakes_unread = await db.intake_records.count_documents({"read": {"$ne": True}})
     chats = await db.chat_messages.count_documents({})
     sessions = len(await db.chat_messages.distinct("session_id"))
     return {
         "contacts": contacts,
+        "contacts_unread": contacts_unread,
         "newsletter": subs,
+        "newsletter_unread": subs_unread,
         "intakes": intakes,
+        "intakes_unread": intakes_unread,
         "chat_messages": chats,
         "chat_sessions": sessions,
     }
@@ -404,6 +418,63 @@ async def admin_stats():
 async def admin_verify():
     """Lightweight ping to validate an admin token from the UI."""
     return {"ok": True}
+
+
+# ---------- Admin row actions: PATCH (mark read/unread) + DELETE ----------
+_INBOX_COLLECTIONS = {
+    "contact": "contact_messages",
+    "newsletter": "newsletter_subs",
+    "intake": "intake_records",
+}
+
+
+async def _patch_row(collection: str, item_id: str, patch: InboxPatch):
+    update = {}
+    if patch.read is not None:
+        update["read"] = patch.read
+    if not update:
+        raise HTTPException(status_code=400, detail="Nothing to update")
+    result = await db[collection].update_one({"id": item_id}, {"$set": update})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Not found")
+    return {"ok": True, "updated": update}
+
+
+async def _delete_row(collection: str, item_id: str):
+    result = await db[collection].delete_one({"id": item_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Not found")
+    return {"ok": True, "deleted": item_id}
+
+
+@api_router.patch("/contact/{item_id}", dependencies=[Depends(require_admin)])
+async def patch_contact(item_id: str, patch: InboxPatch):
+    return await _patch_row("contact_messages", item_id, patch)
+
+
+@api_router.delete("/contact/{item_id}", dependencies=[Depends(require_admin)])
+async def delete_contact(item_id: str):
+    return await _delete_row("contact_messages", item_id)
+
+
+@api_router.patch("/newsletter/{item_id}", dependencies=[Depends(require_admin)])
+async def patch_newsletter(item_id: str, patch: InboxPatch):
+    return await _patch_row("newsletter_subs", item_id, patch)
+
+
+@api_router.delete("/newsletter/{item_id}", dependencies=[Depends(require_admin)])
+async def delete_newsletter(item_id: str):
+    return await _delete_row("newsletter_subs", item_id)
+
+
+@api_router.patch("/intake/{item_id}", dependencies=[Depends(require_admin)])
+async def patch_intake(item_id: str, patch: InboxPatch):
+    return await _patch_row("intake_records", item_id, patch)
+
+
+@api_router.delete("/intake/{item_id}", dependencies=[Depends(require_admin)])
+async def delete_intake(item_id: str):
+    return await _delete_row("intake_records", item_id)
 
 
 app.include_router(api_router)

@@ -17,6 +17,10 @@ import {
   Copy,
   CheckCircle2,
   ArrowLeft,
+  Eye,
+  EyeOff,
+  Trash2,
+  AlertTriangle,
 } from "lucide-react";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -156,16 +160,122 @@ function LoginGate({ onSuccess }) {
 }
 
 // --------------- Stat Card ---------------
-function StatCard({ icon: Icon, label, value, color = "cyan" }) {
+function StatCard({ icon: Icon, label, value, unread = 0, color = "cyan" }) {
   return (
-    <div className="glass p-5 rounded-md">
+    <div className="glass p-5 rounded-md relative">
       <div className="flex items-center gap-3 mb-3">
-        <Icon className={`w-4 h-4 text-${color}`} />
+        <Icon className={`w-4 h-4 text-${color}`} aria-hidden="true" />
         <span className="text-[10px] font-mono uppercase tracking-[0.22em] text-slate-500">
           {label}
         </span>
       </div>
       <div className="font-display text-3xl text-white">{value ?? "—"}</div>
+      {unread > 0 && (
+        <span
+          className="absolute top-3 right-3 inline-flex items-center gap-1 text-[9px] font-mono uppercase tracking-[0.18em] text-cyan border border-cyan/40 bg-cyan/10 px-1.5 py-0.5 rounded-sm"
+          title={`${unread} unread`}
+        >
+          <span className="w-1 h-1 rounded-full bg-cyan animate-pulse" aria-hidden="true" />
+          {unread} new
+        </span>
+      )}
+    </div>
+  );
+}
+
+// --------------- Row Actions (mark read/unread, delete) ---------------
+function RowActions({ row, kind, token, onChanged }) {
+  const [confirming, setConfirming] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const headers = { "X-Admin-Token": token };
+
+  const toggleRead = async (e) => {
+    e.stopPropagation();
+    if (busy) return;
+    setBusy(true);
+    try {
+      await axios.patch(`${API}/${kind}/${row.id}`, { read: !row.read }, { headers });
+      onChanged();
+    } catch {
+      // silent fail
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const doDelete = async (e) => {
+    e.stopPropagation();
+    if (busy) return;
+    setBusy(true);
+    try {
+      await axios.delete(`${API}/${kind}/${row.id}`, { headers });
+      onChanged();
+    } catch {
+      // silent fail
+    } finally {
+      setBusy(false);
+      setConfirming(false);
+    }
+  };
+
+  if (confirming) {
+    return (
+      <div
+        className="flex items-center gap-2"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <span className="text-[10px] font-mono text-amber inline-flex items-center gap-1 uppercase tracking-[0.18em]">
+          <AlertTriangle className="w-3 h-3" aria-hidden="true" />
+          Confirm?
+        </span>
+        <button
+          onClick={doDelete}
+          disabled={busy}
+          className="text-[10px] font-mono uppercase tracking-[0.18em] px-2 py-1 border border-[color:var(--danger)]/60 text-[color:var(--danger)] hover:bg-[color:var(--danger)]/10 rounded-sm disabled:opacity-50"
+          aria-label="Confirm delete"
+        >
+          Delete
+        </button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setConfirming(false);
+          }}
+          className="text-[10px] font-mono uppercase tracking-[0.18em] px-2 py-1 border border-zinc-700 text-slate-400 hover:text-white rounded-sm"
+          aria-label="Cancel delete"
+        >
+          Cancel
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <button
+        onClick={toggleRead}
+        disabled={busy}
+        className="p-1.5 rounded-sm border border-zinc-800 hover:border-cyan/60 text-slate-400 hover:text-cyan transition-colors disabled:opacity-50"
+        aria-label={row.read ? "Mark as unread" : "Mark as read"}
+        title={row.read ? "Mark as unread" : "Mark as read"}
+      >
+        {row.read ? <EyeOff className="w-3 h-3" aria-hidden="true" /> : <Eye className="w-3 h-3" aria-hidden="true" />}
+      </button>
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          setConfirming(true);
+        }}
+        disabled={busy}
+        className="p-1.5 rounded-sm border border-zinc-800 hover:border-[color:var(--danger)]/60 text-slate-400 hover:text-[color:var(--danger)] transition-colors disabled:opacity-50"
+        aria-label="Delete this entry"
+        title="Delete"
+      >
+        <Trash2 className="w-3 h-3" aria-hidden="true" />
+      </button>
     </div>
   );
 }
@@ -214,17 +324,40 @@ function CopyBtn({ text }) {
   );
 }
 
-function ContactRow({ row }) {
+function ContactRow({ row, token, onChanged }) {
   const [open, setOpen] = useState(false);
+  const handleClick = async () => {
+    const next = !open;
+    setOpen(next);
+    // Auto-mark-read on first expand
+    if (next && !row.read) {
+      try {
+        await axios.patch(
+          `${API}/contact/${row.id}`,
+          { read: true },
+          { headers: { "X-Admin-Token": token } }
+        );
+        onChanged();
+      } catch { /* silent */ }
+    }
+  };
   return (
     <div
-      onClick={() => setOpen((o) => !o)}
-      className="border border-zinc-800 hover:border-cyan/40 bg-black/30 rounded-sm px-4 py-3 cursor-pointer transition-colors"
+      onClick={handleClick}
+      className={`group border ${row.read ? "border-zinc-800" : "border-cyan/30"} hover:border-cyan/40 bg-black/30 rounded-sm px-4 py-3 cursor-pointer transition-colors`}
     >
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-white font-medium">{row.name}</span>
+            {!row.read && (
+              <span
+                className="w-1.5 h-1.5 rounded-full bg-cyan flex-shrink-0"
+                style={{ boxShadow: "0 0 8px var(--cyan)" }}
+                aria-label="Unread"
+                title="Unread"
+              />
+            )}
+            <span className={`font-medium ${row.read ? "text-slate-300" : "text-white"}`}>{row.name}</span>
             <a
               href={`mailto:${row.email}`}
               onClick={(e) => e.stopPropagation()}
@@ -245,21 +378,32 @@ function ContactRow({ row }) {
             {row.message}
           </div>
         </div>
-        <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-slate-500 whitespace-nowrap">
-          {fmtDate(row.timestamp)}
+        <div className="flex items-start gap-3 flex-shrink-0">
+          <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-slate-500 whitespace-nowrap pt-1">
+            {fmtDate(row.timestamp)}
+          </div>
+          <RowActions row={row} kind="contact" token={token} onChanged={onChanged} />
         </div>
       </div>
     </div>
   );
 }
 
-function IntakeRow({ row }) {
+function IntakeRow({ row, token, onChanged }) {
   return (
-    <div className="border border-zinc-800 hover:border-cyan/40 bg-black/30 rounded-sm px-4 py-3 transition-colors">
+    <div className={`group border ${row.read ? "border-zinc-800" : "border-amber/40"} hover:border-cyan/40 bg-black/30 rounded-sm px-4 py-3 transition-colors`}>
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-white font-medium">
+            {!row.read && (
+              <span
+                className="w-1.5 h-1.5 rounded-full bg-amber flex-shrink-0"
+                style={{ boxShadow: "0 0 8px var(--amber)" }}
+                aria-label="Unread"
+                title="Unread"
+              />
+            )}
+            <span className={`font-medium ${row.read ? "text-slate-300" : "text-white"}`}>
               {row.name || <span className="italic text-slate-500">Anonymous lead</span>}
             </span>
             {row.email && (
@@ -292,22 +436,33 @@ function IntakeRow({ row }) {
             session: {row.session_id}
           </div>
         </div>
-        <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-slate-500 whitespace-nowrap">
-          {fmtDate(row.timestamp)}
+        <div className="flex items-start gap-3 flex-shrink-0">
+          <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-slate-500 whitespace-nowrap pt-1">
+            {fmtDate(row.timestamp)}
+          </div>
+          <RowActions row={row} kind="intake" token={token} onChanged={onChanged} />
         </div>
       </div>
     </div>
   );
 }
 
-function NewsletterRow({ row }) {
+function NewsletterRow({ row, token, onChanged }) {
   return (
-    <div className="border border-zinc-800 hover:border-cyan/40 bg-black/30 rounded-sm px-4 py-3 transition-colors flex items-center justify-between gap-4 flex-wrap">
+    <div className={`group border ${row.read ? "border-zinc-800" : "border-green/30"} hover:border-cyan/40 bg-black/30 rounded-sm px-4 py-3 transition-colors flex items-center justify-between gap-4 flex-wrap`}>
       <div className="flex items-center gap-3 min-w-0 flex-1">
-        <Mail className="w-4 h-4 text-cyan flex-shrink-0" />
+        {!row.read && (
+          <span
+            className="w-1.5 h-1.5 rounded-full bg-green flex-shrink-0"
+            style={{ boxShadow: "0 0 8px var(--green)" }}
+            aria-label="Unread"
+            title="Unread"
+          />
+        )}
+        <Mail className="w-4 h-4 text-cyan flex-shrink-0" aria-hidden="true" />
         <a
           href={`mailto:${row.email}`}
-          className="text-white font-mono text-sm hover:text-cyan truncate"
+          className={`font-mono text-sm hover:text-cyan truncate ${row.read ? "text-slate-300" : "text-white"}`}
         >
           {row.email}
         </a>
@@ -316,8 +471,11 @@ function NewsletterRow({ row }) {
           {row.source || "—"}
         </span>
       </div>
-      <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-slate-500 whitespace-nowrap">
-        {fmtDate(row.timestamp)}
+      <div className="flex items-center gap-3 flex-shrink-0">
+        <div className="text-[10px] font-mono uppercase tracking-[0.22em] text-slate-500 whitespace-nowrap">
+          {fmtDate(row.timestamp)}
+        </div>
+        <RowActions row={row} kind="newsletter" token={token} onChanged={onChanged} />
       </div>
     </div>
   );
@@ -373,6 +531,11 @@ function Dashboard({ token, onLogout }) {
     fetchTab(tab);
   }, [tab, fetchTab]);
 
+  const refresh = useCallback(() => {
+    fetchTab(tab);
+    fetchStats();
+  }, [fetchTab, fetchStats, tab]);
+
   const filtered = useMemo(() => {
     if (!query.trim()) return rows;
     const q = query.toLowerCase();
@@ -421,9 +584,9 @@ function Dashboard({ token, onLogout }) {
       <div className="max-w-7xl mx-auto px-6 py-8" role="main">
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-8" aria-label="Inbox statistics">
-          <StatCard icon={Inbox} label="Contacts" value={stats?.contacts} color="cyan" />
-          <StatCard icon={Briefcase} label="Intake" value={stats?.intakes} color="amber" />
-          <StatCard icon={Send} label="Newsletter" value={stats?.newsletter} color="green" />
+          <StatCard icon={Inbox} label="Contacts" value={stats?.contacts} unread={stats?.contacts_unread} color="cyan" />
+          <StatCard icon={Briefcase} label="Intake" value={stats?.intakes} unread={stats?.intakes_unread} color="amber" />
+          <StatCard icon={Send} label="Newsletter" value={stats?.newsletter} unread={stats?.newsletter_unread} color="green" />
           <StatCard
             icon={MessageSquare}
             label="Chat Sessions"
@@ -443,6 +606,8 @@ function Dashboard({ token, onLogout }) {
           {TABS.map((t) => {
             const Icon = t.icon;
             const active = tab === t.id;
+            const unreadKey = { contacts: "contacts_unread", intake: "intakes_unread", newsletter: "newsletter_unread" }[t.id];
+            const unreadCount = stats?.[unreadKey] || 0;
             return (
               <button
                 key={t.id}
@@ -458,6 +623,16 @@ function Dashboard({ token, onLogout }) {
                 }`}
               >
                 <Icon className="w-3 h-3" aria-hidden="true" /> {t.label}
+                {unreadCount > 0 && (
+                  <span
+                    className={`text-[9px] font-mono px-1.5 py-0 rounded-full ${
+                      active ? "bg-cyan text-black" : "bg-cyan/20 text-cyan"
+                    }`}
+                    aria-label={`${unreadCount} unread`}
+                  >
+                    {unreadCount}
+                  </span>
+                )}
               </button>
             );
           })}
@@ -477,10 +652,7 @@ function Dashboard({ token, onLogout }) {
             />
           </div>
           <button
-            onClick={() => {
-              fetchTab(tab);
-              fetchStats();
-            }}
+            onClick={refresh}
             className="btn-ghost text-xs"
             disabled={loading}
             aria-label="Refresh transmissions"
@@ -516,11 +688,17 @@ function Dashboard({ token, onLogout }) {
         ) : (
           <div className="space-y-2" role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`}>
             {tab === "contacts" &&
-              filtered.map((r) => <ContactRow key={r.id || r.timestamp} row={r} />)}
+              filtered.map((r) => (
+                <ContactRow key={r.id || r.timestamp} row={r} token={token} onChanged={refresh} />
+              ))}
             {tab === "intake" &&
-              filtered.map((r) => <IntakeRow key={r.id || r.timestamp} row={r} />)}
+              filtered.map((r) => (
+                <IntakeRow key={r.id || r.timestamp} row={r} token={token} onChanged={refresh} />
+              ))}
             {tab === "newsletter" &&
-              filtered.map((r) => <NewsletterRow key={r.id || r.email} row={r} />)}
+              filtered.map((r) => (
+                <NewsletterRow key={r.id || r.email} row={r} token={token} onChanged={refresh} />
+              ))}
           </div>
         )}
       </div>

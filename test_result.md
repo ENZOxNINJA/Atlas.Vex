@@ -225,6 +225,18 @@ backend:
           agent: "testing"
           comment: "✅ VERIFIED: Phase 4 email notifications working perfectly. All three POST endpoints (contact, newsletter, intake) return 201 quickly (<1 second) confirming fire-and-forget implementation ✓. Backend logs show successful email sends to alanmarvel5@gmail.com with Resend IDs (8bd03595, 85529a54, 67c0bc12) ✓. Newsletter idempotency confirmed: second POST with same email returns existing record with same ID (no duplicate email sent) ✓. Email failures (if any) are logged in backend.err.log but do NOT block API responses ✓. No regressions in any existing endpoints (23/23 tests passed) ✓."
 
+  - task: "Admin row actions: PATCH read + DELETE for /contact, /newsletter, /intake"
+    implemented: true
+    working: "NA"
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Phase 5 — added `read: bool = False` field to ContactMessage / NewsletterSubscriber / IntakeRecord models. Added new InboxPatch model. Added admin-gated PATCH /api/{contact|newsletter|intake}/{id} (body: {read?}) and DELETE /api/{contact|newsletter|intake}/{id} endpoints. /api/admin/stats now returns contacts_unread, newsletter_unread, intakes_unread alongside existing keys. Verified manually with curl: PATCH read=true persisted, DELETE 200 then 404 on retry, PATCH/DELETE without token → 401."
+
 frontend:
   - task: "Admin Inbox page (/admin)"
     implemented: true
@@ -246,15 +258,14 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Resend email notifications on POST /contact /intake /newsletter (fire-and-forget)"
-    - "Existing public endpoints still work (POST /contact, POST /newsletter, POST /intake, /telemetry, /chat, /github/repos, /chat/history)"
+    - "Admin row actions: PATCH read + DELETE for /contact, /newsletter, /intake"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
 agent_communication:
     - agent: "main"
-      message: "Phase 4 done: Resend email notifications wired into POST /api/contact, /api/newsletter, /api/intake using FastAPI BackgroundTasks (fire-and-forget). Live verified with 3 successful Resend sends. Please re-test all backend endpoints — focus on (a) POST endpoints still return 201 quickly (the email send happens in background), (b) admin gating still works, (c) chat/telemetry/github unchanged. Test creds in /app/memory/test_credentials.md."
+      message: "Phase 5 done: admin row actions (mark read/unread + delete) added to all 3 inbox types. New endpoints PATCH/DELETE /api/{contact|newsletter|intake}/{id}. /api/admin/stats now includes contacts_unread, newsletter_unread, intakes_unread fields. Need testing focus on: (1) PATCH with read=true/false persists, (2) DELETE removes the record (verify with subsequent GET), (3) PATCH/DELETE without admin token → 401, (4) PATCH/DELETE with invalid id → 404, (5) stats endpoint returns the new unread keys correctly, (6) no regressions to existing endpoints."
     - agent: "testing"
       message: "✅ BACKEND TESTING COMPLETE - ALL TESTS PASSED (20/20). Comprehensive test suite executed covering: (1) Admin auth dependency with valid/wrong/missing tokens ✓ (2) Contact endpoint gating (POST public, GET admin-only) ✓ (3) Newsletter endpoints with idempotency ✓ (4) Intake endpoints with contact mirroring ✓ (5) Admin stats & verify endpoints ✓ (6) All public endpoints (root, telemetry, github, chat, chat history) ✓ (7) Lifespan migration verified via logs (no deprecation warnings) ✓. No critical issues found. Backend is production-ready."
     - agent: "testing"
