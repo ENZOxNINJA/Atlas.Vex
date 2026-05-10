@@ -1,0 +1,17 @@
+{
+  "name": "atlas-vex-ai-worker",
+  "version": "1.0.0",
+  "description": "Cloudflare Worker for ATLAS VEX AI Chat using Workers AI",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "wrangler dev --test-scheduled"
+  },
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  },
+  "keywords": ["cloudflare", "worker", "ai", "chatbot", "atlas-vex"],
+  "author": "Alan Marvel",
+  "license": "MIT"
+}

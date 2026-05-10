@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  mongo:
+    image: mongo:7.0
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - atlasvex
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGO_URL=mongodb://admin:password@mongo:27017
+      - DB_NAME=atlasvex
+      - EMERGENT_LLM_KEY=${EMERGENT_LLM_KEY}
+      - ADMIN_TOKEN=${ADMIN_TOKEN:-atlasvex-admin-2026-change-me}
+      - CORS_ORIGINS=*
+    depends_on:
+      - mongo
+    networks:
+      - atlasvex
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_BACKEND_URL=http://localhost:8000
+    depends_on:
+      - backend
+    networks:
+      - atlasvex
+
+volumes:
+  mongo_data:
+
+networks:
+  atlasvex:
+    driver: bridge

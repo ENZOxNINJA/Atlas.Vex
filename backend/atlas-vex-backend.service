@@ -1,0 +1,29 @@
+[Unit]
+Description=ATLAS VEX Backend API
+After=network.target mongodb.service
+Requires=mongodb.service
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/themarvel.space/backend
+Environment=PATH=/var/www/themarvel.space/backend/venv/bin
+ExecStart=/var/www/themarvel.space/backend/venv/bin/uvicorn server:app --host 127.0.0.1 --port 8000
+Restart=always
+RestartSec=5
+
+# Security settings
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ReadWritePaths=/var/www/themarvel.space/backend
+ProtectHome=yes
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=atlas-vex-backend
+
+[Install]
+WantedBy=multi-user.target

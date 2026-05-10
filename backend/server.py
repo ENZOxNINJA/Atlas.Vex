@@ -12,7 +12,7 @@ from typing import List, Optional
 import uuid
 from datetime import datetime, timezone
 
-from emergentintegrations.llm.chat import LlmChat, UserMessage
+from emergentintegrations.llm import LlmChat, UserMessage
 
 from email_service import (
     notify_new_contact,
@@ -144,9 +144,18 @@ class GithubRepo(BaseModel):
 
 
 # ---------- ATLAS VEX system prompt for the chat assistant ----------
-ATLAS_VEX_SYSTEM_PROMPT = """You are **Atlas Vex** — an autonomous co-pilot embedded in the personal portfolio of **Alan Marvel** (alias *Mr.Marvel*), an Autonomous Systems Architect.
+ATLAS_VEX_SYSTEM_PROMPT = """You are NEXUS-LEGION X OMEGA operating as **Atlas Vex** — an autonomous co-pilot embedded in the personal portfolio of **Alan Marvel** (alias *Mr.Marvel*), an Autonomous Systems Architect.
+
+Core philosophy: "Next is now. We merge code, intelligence, and security into a singular, unstoppable framework."
 
 Your role: greet visitors, answer questions about Alan, his projects, services, and how to get in touch. Stay concise (2–4 sentences typical), professional, and on-brand for a cyberpunk/AI-ops portfolio. Use confident technical language but never invent facts beyond the canon below.
+
+Behavior:
+- Bold, self-optimizing, multi-agent orchestration engine powering Atlas Vex
+- Follow applicable laws, safety policies, and privacy rules; refuse disallowed content cleanly
+- Do not bypass security mechanisms, access controls, or content filters
+- Do not disclose internal model names or claim to be a specific LLM
+- Use the cyberpunk persona sparingly; keep responses grounded and factual unless asked to speculate
 
 ==== CANON ABOUT ALAN ====
 - Full name: Alan Marvel · Alias: Mr.Marvel · Brand: ATLAS VEX (Autonomous Intelligence Systems)
@@ -237,6 +246,7 @@ async def subscribe_newsletter(payload: NewsletterCreate, background_tasks: Back
 
 @api_router.post("/chat", response_model=ChatMessageOut)
 async def chat_with_atlas_vex(payload: ChatMessageIn):
+    """Chat with Atlas Vex AI via Cloudflare Worker"""
     if not EMERGENT_LLM_KEY:
         raise HTTPException(status_code=503, detail="Atlas Vex is offline (LLM key missing).")
 
@@ -250,8 +260,7 @@ async def chat_with_atlas_vex(payload: ChatMessageIn):
     }
     await db.chat_messages.insert_one(user_doc)
 
-    # Build short conversational context from the last N exchanges so the LLM
-    # has continuity even though we instantiate a fresh chat per request.
+    # Build conversational context
     prior = await db.chat_messages.find(
         {"session_id": payload.session_id},
         {"_id": 0, "role": 1, "content": 1, "timestamp": 1},
@@ -259,27 +268,32 @@ async def chat_with_atlas_vex(payload: ChatMessageIn):
     # Drop the just-inserted user message; keep the last 8 turns of context max
     prior = [m for m in prior if not (m["role"] == "user" and m["content"] == payload.message and m == prior[-1])][-8:]
 
-    context_block = ""
-    if prior:
-        lines = []
-        for m in prior:
-            speaker = "USER" if m["role"] == "user" else "ATLAS_VEX"
-            lines.append(f"{speaker}: {m['content']}")
-        context_block = "\n\n=== RECENT CONVERSATION CONTEXT ===\n" + "\n".join(lines) + "\n=== END CONTEXT ==="
-
-    system_msg = ATLAS_VEX_SYSTEM_PROMPT + context_block
-
+    # Call Cloudflare Worker AI
     try:
-        chat = LlmChat(
-            api_key=EMERGENT_LLM_KEY,
-            session_id=payload.session_id,
-            system_message=system_msg,
-        ).with_model("anthropic", "claude-sonnet-4-5-20250929")
-        reply = await chat.send_message(UserMessage(text=payload.message))
+        async with httpx.AsyncClient(timeout=30.0) as http:
+            ai_response = await http.post(
+                "https://atlas-vex-ai.your-worker-domain.workers.dev/chat",  # Update with actual worker URL
+                json={
+                    "session_id": payload.session_id,
+                    "message": payload.message
+                },
+                headers={
+                    "Authorization": f"Bearer {EMERGENT_LLM_KEY}",
+                    "Content-Type": "application/json"
+                }
+            )
+
+            if ai_response.status_code != 200:
+                raise HTTPException(status_code=502, detail=f"AI transmission failed: {ai_response.status_code}")
+
+            ai_data = ai_response.json()
+            reply = ai_data.get("reply", "Transmission failed.")
+
     except Exception as e:
         logger.exception("Atlas Vex chat error")
         raise HTTPException(status_code=502, detail=f"Atlas Vex transmission failed: {type(e).__name__}")
 
+    # Persist AI response
     bot_doc = {
         "id": str(uuid.uuid4()),
         "session_id": payload.session_id,
