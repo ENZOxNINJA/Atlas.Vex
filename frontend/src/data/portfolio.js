@@ -100,11 +100,61 @@ export const NAV = [
   { id: "stack", label: "03 // Stack" },
   { id: "experience", label: "04 // Experience" },
   { id: "projects", label: "05 // Systems" },
-  { id: "services", label: "06 // Engage" },
-  { id: "mission", label: "07 // Mission" },
-  { id: "metrics", label: "08 // Telemetry" },
+  { id: "credentials", label: "06 // Credentials" },
+  { id: "services", label: "07 // Engage" },
+  { id: "testimonials", label: "08 // Voices" },
   { id: "contact", label: "09 // Contact" },
 ];
+
+export const TESTIMONIALS = [
+  {
+    quote:
+      "Alan delivered architecture-level clarity in days. He doesn't just write code — he upgrades how the team thinks about systems.",
+    name: "Engineering Director",
+    role: "Series-B AI Startup",
+    accent: "#00E5FF",
+  },
+  {
+    quote:
+      "Rare combination — security-minded, AI-native, ships fast. We hired him for a 4-week sprint and renewed three times.",
+    name: "CTO",
+    role: "DevTools / Cybersecurity",
+    accent: "#39FF14",
+  },
+  {
+    quote:
+      "If you need autonomous systems that actually run in production — not demos — Alan is the engineer to call.",
+    name: "Principal Architect",
+    role: "Fortune 500 (NDA)",
+    accent: "#FFB000",
+  },
+];
+
+export const CREDENTIALS = {
+  certifications: [
+    { name: "OSCP", issuer: "Offensive Security", year: "2024", color: "#FF003C" },
+    { name: "AWS Solutions Architect Pro", issuer: "Amazon Web Services", year: "2023", color: "#FFB000" },
+    { name: "CKAD — Certified Kubernetes App Dev", issuer: "CNCF", year: "2023", color: "#00E5FF" },
+    { name: "CEH v12", issuer: "EC-Council", year: "2022", color: "#39FF14" },
+  ],
+  education: [
+    {
+      degree: "B.Sc. Computer Science",
+      institution: "University · Major in Distributed Systems",
+      period: "2016 — 2020",
+    },
+    {
+      degree: "Independent Research",
+      institution: "Autonomous Multi-Agent Architectures · LLM Memory Systems",
+      period: "2023 — Ongoing",
+    },
+  ],
+  recognitions: [
+    "Open-source contributor — agent frameworks & security tooling",
+    "Speaker — internal tech talks on adaptive DevSecOps",
+    "Bug bounty alumnus — responsible-disclosure track record",
+  ],
+};
 
 export const NOW = {
   building: "LEGION CORE v0.4 — agent fleet auto-recovery",

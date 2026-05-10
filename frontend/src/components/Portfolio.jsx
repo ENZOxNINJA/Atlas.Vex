@@ -6,10 +6,13 @@ import Skills from "./Skills";
 import Stack from "./Stack";
 import Experience from "./Experience";
 import Projects from "./Projects";
+import Credentials from "./Credentials";
 import Services from "./Services";
+import Testimonials from "./Testimonials";
 import Mission from "./Mission";
 import Metrics from "./Metrics";
 import Contact from "./Contact";
+import Newsletter from "./Newsletter";
 import Footer from "./Footer";
 
 export default function Portfolio() {
@@ -23,10 +26,13 @@ export default function Portfolio() {
         <Stack />
         <Experience />
         <Projects />
+        <Credentials />
         <Services />
+        <Testimonials />
         <Mission />
         <Metrics />
         <Contact />
+        <Newsletter />
       </main>
       <Footer />
     </div>

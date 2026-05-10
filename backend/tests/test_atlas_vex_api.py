@@ -104,6 +104,42 @@ class TestContact:
         assert "timestamp" in sample
 
 
+# ---------- Newsletter ----------
+class TestNewsletter:
+    def test_subscribe_valid_email(self, client):
+        import uuid as _uuid
+        email = f"test_news_{_uuid.uuid4().hex[:8]}@example.com"
+        r = client.post(f"{API}/newsletter", json={"email": email}, timeout=15)
+        assert r.status_code == 201, r.text
+        data = r.json()
+        assert "id" in data and isinstance(data["id"], str) and len(data["id"]) > 0
+        assert data["email"] == email
+        assert "timestamp" in data
+        assert "source" in data
+        assert data["source"] == "atlasvex-portfolio"
+        assert "_id" not in data
+
+    def test_subscribe_idempotent(self, client):
+        import uuid as _uuid
+        email = f"test_idem_{_uuid.uuid4().hex[:8]}@example.com"
+        r1 = client.post(f"{API}/newsletter", json={"email": email}, timeout=15)
+        assert r1.status_code == 201
+        d1 = r1.json()
+        r2 = client.post(f"{API}/newsletter", json={"email": email}, timeout=15)
+        assert r2.status_code == 201
+        d2 = r2.json()
+        assert d1["id"] == d2["id"]
+        assert d1["email"] == d2["email"]
+
+    def test_subscribe_invalid_email(self, client):
+        r = client.post(f"{API}/newsletter", json={"email": "not-an-email"}, timeout=15)
+        assert r.status_code == 422
+
+    def test_subscribe_missing_email(self, client):
+        r = client.post(f"{API}/newsletter", json={}, timeout=15)
+        assert r.status_code == 422
+
+
 # ---------- Telemetry ----------
 class TestTelemetry:
     def test_telemetry_shape(self, client):

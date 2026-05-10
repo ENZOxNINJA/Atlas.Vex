@@ -46,6 +46,19 @@ class TelemetryPoint(BaseModel):
     unit: str
 
 
+class NewsletterCreate(BaseModel):
+    email: EmailStr
+    source: str | None = Field(default="atlasvex-portfolio", max_length=100)
+
+
+class NewsletterSubscriber(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    email: EmailStr
+    source: str | None = "atlasvex-portfolio"
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
 # ---------- Routes ----------
 @api_router.get("/")
 async def root():
@@ -81,6 +94,20 @@ async def telemetry():
         TelemetryPoint(label="Memory Nodes", value=round(48 + random.random() * 6, 0), unit="dist"),
         TelemetryPoint(label="Threats Blocked", value=round(2300 + random.random() * 400, 0), unit="24h"),
     ]
+
+
+@api_router.post("/newsletter", response_model=NewsletterSubscriber, status_code=201)
+async def subscribe_newsletter(payload: NewsletterCreate):
+    existing = await db.newsletter_subs.find_one({"email": payload.email}, {"_id": 0})
+    if existing:
+        if isinstance(existing.get('timestamp'), str):
+            existing['timestamp'] = datetime.fromisoformat(existing['timestamp'])
+        return NewsletterSubscriber(**existing)
+    obj = NewsletterSubscriber(**payload.model_dump())
+    doc = obj.model_dump()
+    doc['timestamp'] = doc['timestamp'].isoformat()
+    await db.newsletter_subs.insert_one(doc)
+    return obj
 
 
 app.include_router(api_router)
