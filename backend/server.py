@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, APIRouter, HTTPException, Header, Depends
+from fastapi import FastAPI, APIRouter, HTTPException, Header, Depends, BackgroundTasks
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -13,6 +13,12 @@ import uuid
 from datetime import datetime, timezone
 
 from emergentintegrations.llm.chat import LlmChat, UserMessage
+
+from email_service import (
+    notify_new_contact,
+    notify_new_intake,
+    notify_new_subscriber,
+)
 
 
 ROOT_DIR = Path(__file__).parent
@@ -173,11 +179,13 @@ async def root():
 
 
 @api_router.post("/contact", response_model=ContactMessage, status_code=201)
-async def create_contact(payload: ContactMessageCreate):
+async def create_contact(payload: ContactMessageCreate, background_tasks: BackgroundTasks):
     obj = ContactMessage(**payload.model_dump())
     doc = obj.model_dump()
     doc['timestamp'] = doc['timestamp'].isoformat()
     await db.contact_messages.insert_one(doc)
+    # Fire-and-forget owner notification — never blocks the response
+    background_tasks.add_task(notify_new_contact, doc)
     return obj
 
 
@@ -204,7 +212,7 @@ async def telemetry():
 
 
 @api_router.post("/newsletter", response_model=NewsletterSubscriber, status_code=201)
-async def subscribe_newsletter(payload: NewsletterCreate):
+async def subscribe_newsletter(payload: NewsletterCreate, background_tasks: BackgroundTasks):
     existing = await db.newsletter_subs.find_one({"email": payload.email}, {"_id": 0})
     if existing:
         if isinstance(existing.get('timestamp'), str):
@@ -214,6 +222,8 @@ async def subscribe_newsletter(payload: NewsletterCreate):
     doc = obj.model_dump()
     doc['timestamp'] = doc['timestamp'].isoformat()
     await db.newsletter_subs.insert_one(doc)
+    # Fire-and-forget owner notification (only on NEW subscribe, not duplicates)
+    background_tasks.add_task(notify_new_subscriber, doc)
     return obj
 
 
@@ -284,7 +294,7 @@ async def chat_history(session_id: str):
 
 
 @api_router.post("/intake", response_model=IntakeRecord, status_code=201)
-async def submit_intake(payload: IntakeCreate):
+async def submit_intake(payload: IntakeCreate, background_tasks: BackgroundTasks):
     """Lead-qualifying intake captured from the Atlas Vex chatbot."""
     obj = IntakeRecord(**payload.model_dump())
     doc = obj.model_dump()
@@ -308,6 +318,8 @@ async def submit_intake(payload: IntakeCreate):
         "message": summary,
         "timestamp": obj.timestamp.isoformat(),
     })
+    # Fire-and-forget owner notification
+    background_tasks.add_task(notify_new_intake, doc)
     return obj
 
 

@@ -210,6 +210,21 @@ backend:
           agent: "testing"
           comment: "✅ VERIFIED: All public endpoints working correctly after refactor. GET /api/ → 200 {service:'ATLAS VEX', status:'online'} ✓. GET /api/telemetry → 200 list of 4 TelemetryPoint dicts ✓. GET /api/github/repos → 200 list ✓. POST /api/chat → 200 with reply field (LLM integration working) ✓. GET /api/chat/history/{session_id} → 200 with messages array ✓. No regressions from lifespan migration."
 
+  - task: "Resend email notifications on POST /contact /intake /newsletter (fire-and-forget)"
+    implemented: true
+    working: true
+    file: "backend/email_service.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Phase 4 — built /app/backend/email_service.py with brand-styled HTML templates for 3 notification types (contact / intake / newsletter). Hooked into POST endpoints via FastAPI BackgroundTasks for fire-and-forget delivery; failures are logged but never raised. Reads env vars at call-time so it's resilient to import order. Verified live with 3 successful Resend sends (IDs 67c8d9b3, f771ab08, f31e46e8). Resend is in test mode — sender is onboarding@resend.dev, NOTIFY_EMAIL is alanmarvel5@gmail.com (must match account email exactly, lowercase)."
+        - working: true
+          agent: "testing"
+          comment: "✅ VERIFIED: Phase 4 email notifications working perfectly. All three POST endpoints (contact, newsletter, intake) return 201 quickly (<1 second) confirming fire-and-forget implementation ✓. Backend logs show successful email sends to alanmarvel5@gmail.com with Resend IDs (8bd03595, 85529a54, 67c0bc12) ✓. Newsletter idempotency confirmed: second POST with same email returns existing record with same ID (no duplicate email sent) ✓. Email failures (if any) are logged in backend.err.log but do NOT block API responses ✓. No regressions in any existing endpoints (23/23 tests passed) ✓."
+
 frontend:
   - task: "Admin Inbox page (/admin)"
     implemented: true
@@ -226,24 +241,21 @@ frontend:
 metadata:
   created_by: "main_agent"
   version: "1.0"
-  test_sequence: 2
+  test_sequence: 3
   run_ui: false
 
 test_plan:
   current_focus:
-    - "Admin token auth dependency (X-Admin-Token)"
-    - "Gate GET /api/contact behind admin token"
-    - "GET /api/newsletter (admin)"
-    - "GET /api/intake (admin)"
-    - "GET /api/admin/stats and /api/admin/verify"
+    - "Resend email notifications on POST /contact /intake /newsletter (fire-and-forget)"
     - "Existing public endpoints still work (POST /contact, POST /newsletter, POST /intake, /telemetry, /chat, /github/repos, /chat/history)"
-    - "Lifespan migration (replace @on_event shutdown)"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
 agent_communication:
     - agent: "main"
-      message: "Default improvement implemented: token-gated Admin Inbox + FastAPI lifespan migration. Admin token is in /app/memory/test_credentials.md (atlasvex-admin-2026-change-me) and /app/backend/.env. Please test all backend endpoints — both new admin ones (with valid token, missing token=401, wrong token=401) and verify existing public flows (POST /contact, POST /newsletter, POST /intake, GET /telemetry, POST /chat, GET /chat/history/{sid}, GET /github/repos) still work without auth. Note: /api/contact GET is now admin-gated; POST /api/contact remains public."
+      message: "Phase 4 done: Resend email notifications wired into POST /api/contact, /api/newsletter, /api/intake using FastAPI BackgroundTasks (fire-and-forget). Live verified with 3 successful Resend sends. Please re-test all backend endpoints — focus on (a) POST endpoints still return 201 quickly (the email send happens in background), (b) admin gating still works, (c) chat/telemetry/github unchanged. Test creds in /app/memory/test_credentials.md."
     - agent: "testing"
       message: "✅ BACKEND TESTING COMPLETE - ALL TESTS PASSED (20/20). Comprehensive test suite executed covering: (1) Admin auth dependency with valid/wrong/missing tokens ✓ (2) Contact endpoint gating (POST public, GET admin-only) ✓ (3) Newsletter endpoints with idempotency ✓ (4) Intake endpoints with contact mirroring ✓ (5) Admin stats & verify endpoints ✓ (6) All public endpoints (root, telemetry, github, chat, chat history) ✓ (7) Lifespan migration verified via logs (no deprecation warnings) ✓. No critical issues found. Backend is production-ready."
+    - agent: "testing"
+      message: "✅ PHASE 4 TESTING COMPLETE - ALL TESTS PASSED (23/23). Email notification integration verified: (1) POST /api/contact returns 201 in <1s with fire-and-forget email ✓ (2) POST /api/newsletter returns 201 in <1s with fire-and-forget email ✓ (3) POST /api/intake returns 201 in <1s with fire-and-forget email ✓ (4) Newsletter idempotency: second POST returns existing record, no duplicate email ✓ (5) Backend logs confirm successful Resend email sends to alanmarvel5@gmail.com ✓ (6) No regressions in any existing endpoints ✓. Email failures (if any) are logged but do NOT block API responses. Backend is production-ready."

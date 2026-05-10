@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """
 ATLAS VEX Backend API Test Suite
-Tests admin token gating, public endpoints, and lifespan migration
+Tests admin token gating, public endpoints, lifespan migration, and Phase 4 email notifications
 """
 
 import requests
 import json
 import uuid
+import time
 from datetime import datetime
 
 # Configuration
@@ -51,6 +52,11 @@ print("ATLAS VEX Backend API Test Suite")
 print("=" * 80)
 print(f"Base URL: {BASE_URL}")
 print(f"Admin Token: {ADMIN_TOKEN[:20]}...")
+print()
+print("PHASE 4 FOCUS: Email notifications (fire-and-forget via BackgroundTasks)")
+print("- POST /api/contact, /api/newsletter, /api/intake must return 201 quickly (<1s)")
+print("- Email failures logged in backend.err.log but should NOT block API response")
+print("- Resend test mode: emails only deliver to alanmarvel5@gmail.com")
 print("=" * 80)
 print()
 
@@ -119,7 +125,7 @@ print()
 print("TEST SUITE 2: /api/contact Gating")
 print("-" * 80)
 
-# Test 2.1: POST /api/contact (no token) with valid body
+# Test 2.1: POST /api/contact (no token) with valid body - PHASE 4: Check response time
 contact_payload = {
     "name": "John Smith",
     "email": TEST_CONTACT_EMAIL,
@@ -129,12 +135,23 @@ contact_payload = {
 created_contact_id = None
 
 try:
+    start_time = time.time()
     response = requests.post(f"{BASE_URL}/contact", json=contact_payload, timeout=10)
+    response_time = time.time() - start_time
+    
     if response.status_code == 201:
         data = response.json()
         if "id" in data and "timestamp" in data and data.get("email") == TEST_CONTACT_EMAIL:
             created_contact_id = data["id"]
             log_test("POST /api/contact (no token) returns 201 with id and timestamp", True)
+            # Phase 4: Verify response time is under 1 second (email is fire-and-forget)
+            if response_time < 1.0:
+                log_test("POST /api/contact returns quickly (<1s) - email is fire-and-forget", True)
+            else:
+                log_warning("POST /api/contact response time", 
+                           f"Response took {response_time:.2f}s (expected <1s). Email may be blocking.")
+                log_test("POST /api/contact returns quickly (<1s) - email is fire-and-forget", False,
+                        f"Response time: {response_time:.2f}s (expected <1s)")
         else:
             log_test("POST /api/contact (no token) returns 201 with id and timestamp", False, 
                     f"Missing fields or wrong email. Response: {data}")
@@ -187,7 +204,7 @@ print()
 print("TEST SUITE 3: /api/newsletter")
 print("-" * 80)
 
-# Test 3.1: POST /api/newsletter (no token) with valid email
+# Test 3.1: POST /api/newsletter (no token) with valid email - PHASE 4: Check response time
 newsletter_payload = {
     "email": TEST_EMAIL,
     "source": "atlasvex-portfolio"
@@ -195,12 +212,23 @@ newsletter_payload = {
 created_subscriber_id = None
 
 try:
+    start_time = time.time()
     response = requests.post(f"{BASE_URL}/newsletter", json=newsletter_payload, timeout=10)
+    response_time = time.time() - start_time
+    
     if response.status_code == 201:
         data = response.json()
         if "id" in data and data.get("email") == TEST_EMAIL:
             created_subscriber_id = data["id"]
             log_test("POST /api/newsletter (no token) returns 201 with subscriber", True)
+            # Phase 4: Verify response time is under 1 second
+            if response_time < 1.0:
+                log_test("POST /api/newsletter returns quickly (<1s) - email is fire-and-forget", True)
+            else:
+                log_warning("POST /api/newsletter response time", 
+                           f"Response took {response_time:.2f}s (expected <1s). Email may be blocking.")
+                log_test("POST /api/newsletter returns quickly (<1s) - email is fire-and-forget", False,
+                        f"Response time: {response_time:.2f}s (expected <1s)")
         else:
             log_test("POST /api/newsletter (no token) returns 201 with subscriber", False, 
                     f"Missing id or wrong email. Response: {data}")
@@ -269,7 +297,7 @@ print()
 print("TEST SUITE 4: /api/intake")
 print("-" * 80)
 
-# Test 4.1: POST /api/intake (no token) with required fields
+# Test 4.1: POST /api/intake (no token) with required fields - PHASE 4: Check response time
 intake_payload = {
     "session_id": TEST_SESSION_ID,
     "project_type": "Autonomous Multi-Agent System",
@@ -282,12 +310,23 @@ intake_payload = {
 created_intake_id = None
 
 try:
+    start_time = time.time()
     response = requests.post(f"{BASE_URL}/intake", json=intake_payload, timeout=10)
+    response_time = time.time() - start_time
+    
     if response.status_code == 201:
         data = response.json()
         if "id" in data and data.get("session_id") == TEST_SESSION_ID:
             created_intake_id = data["id"]
             log_test("POST /api/intake (no token) returns 201 with intake record", True)
+            # Phase 4: Verify response time is under 1 second
+            if response_time < 1.0:
+                log_test("POST /api/intake returns quickly (<1s) - email is fire-and-forget", True)
+            else:
+                log_warning("POST /api/intake response time", 
+                           f"Response took {response_time:.2f}s (expected <1s). Email may be blocking.")
+                log_test("POST /api/intake returns quickly (<1s) - email is fire-and-forget", False,
+                        f"Response time: {response_time:.2f}s (expected <1s)")
         else:
             log_test("POST /api/intake (no token) returns 201 with intake record", False, 
                     f"Missing id or wrong session_id. Response: {data}")
