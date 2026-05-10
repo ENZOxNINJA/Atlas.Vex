@@ -87,7 +87,7 @@ export default function ChatBot() {
       <button
         onClick={() => setOpen((v) => !v)}
         data-testid="chatbot-toggle"
-        className="fixed bottom-6 right-6 z-[60] group"
+        className="fixed bottom-6 left-6 z-[60] group"
         aria-label="Open Atlas Vex chat"
       >
         <span className="absolute inset-0 rounded-full bg-[#00E5FF] opacity-30 blur-2xl group-hover:opacity-50 transition-opacity" />
@@ -110,7 +110,7 @@ export default function ChatBot() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 24, scale: 0.96 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
-            className="fixed bottom-24 right-4 sm:right-6 z-[55] w-[calc(100vw-2rem)] sm:w-[400px] max-w-[420px] h-[560px] max-h-[80vh] rounded-[28px] border border-zinc-800 bg-[#020617]/95 backdrop-blur-2xl flex flex-col overflow-hidden shadow-[0_30px_80px_-20px_rgba(0,229,255,0.35)]"
+            className="fixed bottom-24 left-4 sm:left-6 z-[55] w-[calc(100vw-2rem)] sm:w-[400px] max-w-[420px] h-[560px] max-h-[80vh] rounded-[28px] border border-zinc-800 bg-[#020617]/95 backdrop-blur-2xl flex flex-col overflow-hidden shadow-[0_30px_80px_-20px_rgba(0,229,255,0.35)]"
             data-testid="chatbot-panel"
           >
             {/* Header */}

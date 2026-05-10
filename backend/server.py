@@ -243,6 +243,12 @@ async def chat_history(session_id: str):
 @api_router.get("/github/repos", response_model=List[GithubRepo])
 async def github_repos():
     """Aggregate public repos for the three GitHub identities mapped to projects."""
+    # 5-minute in-memory cache to avoid hammering the public GitHub API
+    now_ts = datetime.now(timezone.utc).timestamp()
+    cache = getattr(github_repos, "_cache", None)
+    if cache and now_ts - cache["ts"] < 300:
+        return cache["data"]
+
     owners = ["mrmarvel123", "ENZOxNINJA", "AtlasTheDev123"]
     out: List[GithubRepo] = []
     async with httpx.AsyncClient(timeout=10.0) as http:
@@ -270,9 +276,10 @@ async def github_repos():
                     )
             except Exception:
                 continue
-    # Sort newest first across all owners, return top 12
     out.sort(key=lambda r: r.updated_at, reverse=True)
-    return out[:12]
+    result = out[:12]
+    github_repos._cache = {"ts": now_ts, "data": result}
+    return result
 
 
 app.include_router(api_router)
