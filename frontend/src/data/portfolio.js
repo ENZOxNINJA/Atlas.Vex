@@ -22,14 +22,15 @@ export const PROFILE = {
 
 export const SKILLS = [
   { label: "Autonomous Multi-Agent Systems", span: "lg:col-span-3", weight: "primary" },
+  { label: "Software Engineering", span: "lg:col-span-3", weight: "primary" },
   { label: "AI Orchestration", span: "lg:col-span-2", weight: "primary" },
-  { label: "Reverse Engineering", span: "lg:col-span-1" },
+  { label: "Reverse Engineering", span: "lg:col-span-2" },
   { label: "DevSecOps", span: "lg:col-span-2" },
   { label: "Ethical Hacking", span: "lg:col-span-2" },
   { label: "Cybersecurity Research", span: "lg:col-span-2" },
-  { label: "Systems Architecture", span: "lg:col-span-3" },
+  { label: "Systems Architecture", span: "lg:col-span-2" },
   { label: "Predictive Automation", span: "lg:col-span-3" },
-  { label: "Distributed Systems", span: "lg:col-span-2" },
+  { label: "Distributed Systems", span: "lg:col-span-3" },
   { label: "Cloud Architecture", span: "lg:col-span-2" },
   { label: "Infrastructure", span: "lg:col-span-2" },
 ];

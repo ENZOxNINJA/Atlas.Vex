@@ -95,9 +95,9 @@ export default function Identity() {
               transition={{ duration: 0.6 }}
               className="font-display font-bold text-[#F8FAFC] text-3xl sm:text-4xl lg:text-5xl tracking-tighter leading-[1.05]"
             >
-              I architect autonomous systems that <span className="text-[#00E5FF]">think</span>,
+              Hi, I'm <span className="text-[#00E5FF]">Alan Marvel</span> — a software engineer
               <br />
-              defend themselves, and <span className="text-[#39FF14]">execute</span> at scale.
+              architecting <span className="text-[#39FF14]">autonomous, secure</span> systems.
             </motion.h2>
 
             <motion.p
@@ -107,9 +107,22 @@ export default function Identity() {
               transition={{ duration: 0.6, delay: 0.1 }}
               className="text-slate-300 mt-6 max-w-2xl leading-relaxed"
             >
-              Operating at the intersection of AI orchestration, distributed systems, and offensive
-              security — I build the infrastructure layer that lets autonomous agents safely run in
-              production without a human babysitter.
+              I'm a software engineer specialising in autonomous AI systems, distributed
+              infrastructure, and offensive security. I build production-grade platforms — from
+              multi-agent orchestration meshes to zero-trust DevSecOps pipelines — that operate
+              reliably without a human in the loop.
+            </motion.p>
+
+            <motion.p
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.15 }}
+              className="text-slate-400 mt-4 max-w-2xl leading-relaxed text-sm"
+            >
+              Equally comfortable shipping clean React/TypeScript front-ends, Rust + Go services,
+              and Kubernetes-native back-ends. I obsess over resilience, provenance, and the
+              boundary where intelligent automation meets adversarial reality.
             </motion.p>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-10">
