@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
-import { Send, Mail, Github, Phone } from "lucide-react";
+import { Send, Mail, Github, Phone, MessageCircle } from "lucide-react";
 import { PROFILE } from "../data/portfolio";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -94,9 +94,24 @@ export default function Contact() {
                   </div>
                 </a>
                 <a
+                  href={PROFILE.socials.whatsapp}
+                  target="_blank"
+                  rel="noreferrer"
+                  data-testid="contact-social-whatsapp"
+                  className="flex items-center gap-3 p-4 rounded-2xl border border-zinc-800 bg-zinc-950/50 hover:border-[#39FF14]/60 hover:text-[#39FF14] transition-colors text-slate-300"
+                >
+                  <MessageCircle size={16} />
+                  <div className="flex flex-col items-start">
+                    <span className="font-mono text-[9px] tracking-[0.22em] uppercase text-slate-500">
+                      WhatsApp
+                    </span>
+                    <span className="font-mono text-xs text-slate-200">Open Chat</span>
+                  </div>
+                </a>
+                <a
                   href={`tel:${PROFILE.socials.phoneRaw}`}
                   data-testid="contact-phone-link"
-                  className="flex items-center gap-3 p-4 rounded-2xl border border-zinc-800 bg-zinc-950/50 hover:border-[#FFB000]/60 hover:text-[#FFB000] transition-colors text-slate-300"
+                  className="col-span-2 flex items-center gap-3 p-4 rounded-2xl border border-zinc-800 bg-zinc-950/50 hover:border-[#FFB000]/60 hover:text-[#FFB000] transition-colors text-slate-300"
                 >
                   <Phone size={16} />
                   <div className="flex flex-col items-start">

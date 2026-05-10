@@ -15,6 +15,7 @@ export const PROFILE = {
     email: "Alanmarvel5@gmail.com",
     phone: "+60 11-1854 4005",
     phoneRaw: "+601118544005",
+    whatsapp: "https://wa.me/qr/CLBPIW5WFCY3B1",
     github: "https://github.com/mrmarvel123",
   },
 };
