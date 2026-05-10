@@ -12,7 +12,7 @@ export const PROFILE = {
   status: "Online · Accepting Engagements",
   portrait: "/assets/jake-portrait.png",
   socials: {
-    email: "jake@atlasvex.io",
+    email: "Alanmarvel5@gmail.com",
     github: "https://github.com/jakethevex",
     linkedin: "https://www.linkedin.com/in/jakethevex",
     twitter: "https://x.com/jakethevex",
