@@ -91,7 +91,8 @@ uvicorn server:app --reload
 #### Frontend
 ```bash
 cd frontend
-npm install --legacy-peer-deps
+npm insnpm install --legacy-peer-deps
+
 npm start
 ```
 
