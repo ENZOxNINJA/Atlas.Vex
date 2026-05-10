@@ -88,13 +88,24 @@ export default function Hero() {
             Initialize Contact <ArrowRight size={14} />
           </button>
           <a
-            href="#"
-            onClick={(e) => e.preventDefault()}
+            href={PROFILE.socials.calendly}
+            target="_blank"
+            rel="noreferrer"
             className="btn-ghost"
             data-testid="hero-cta-resume"
             title="Resume coming soon"
           >
             <Download size={14} /> Download Dossier
+          </a>
+          <a
+            href={PROFILE.socials.calendly}
+            target="_blank"
+            rel="noreferrer"
+            data-testid="hero-cta-book"
+            className="inline-flex items-center gap-2 px-3 py-2 font-mono text-[11px] tracking-[0.22em] uppercase text-[#39FF14] border border-[#39FF14]/40 rounded-full bg-[#39FF14]/5 hover:bg-[#39FF14]/15 transition-colors"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-[#39FF14] blink" />
+            Book 30-min Call
           </a>
           <button
             onClick={() => scrollTo("projects")}

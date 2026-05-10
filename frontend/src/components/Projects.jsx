@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 import { PROJECTS } from "../data/portfolio";
@@ -31,18 +32,16 @@ export default function Projects() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {PROJECTS.map((p, i) => (
-            <motion.a
+            <motion.div
               key={p.id}
-              href={p.repo}
-              target="_blank"
-              rel="noreferrer"
               initial={{ opacity: 0, y: 32 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.15 }}
               transition={{ duration: 0.55, delay: i * 0.08 }}
-              className="group relative rounded-[32px] border border-zinc-800 bg-zinc-950/60 backdrop-blur-xl overflow-hidden hover:border-[#00E5FF]/50 transition-all block"
+              className="group relative rounded-[32px] border border-zinc-800 bg-zinc-950/60 backdrop-blur-xl overflow-hidden hover:border-[#00E5FF]/50 transition-all"
               data-testid={`project-${p.id}-card`}
             >
+              <Link to={`/projects/${p.id}`} className="block" data-testid={`project-${p.id}-link`}>
               <div
                 className="absolute -top-20 -right-20 w-72 h-72 rounded-full opacity-0 group-hover:opacity-25 blur-3xl transition-opacity"
                 style={{ background: p.accent }}
@@ -54,19 +53,21 @@ export default function Projects() {
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 grayscale-[20%] contrast-110"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-[#020617]/40 to-transparent" />
-                <span className="absolute top-4 left-4 font-mono text-[10px] tracking-[0.3em] uppercase text-slate-300 bg-black/50 border border-zinc-700 rounded-full px-3 py-1">
-                  Sys/{p.code}
-                </span>
-                <span
-                  className="absolute top-4 right-4 font-mono text-[9px] tracking-[0.3em] uppercase border rounded-full px-2.5 py-1 backdrop-blur"
-                  style={{
-                    color: p.accent,
-                    borderColor: `${p.accent}55`,
-                    background: `${p.accent}10`,
-                  }}
-                >
-                  • {p.status}
-                </span>
+                <div className="absolute top-4 left-4 flex items-center gap-2 flex-wrap">
+                  <span className="font-mono text-[10px] tracking-[0.3em] uppercase text-slate-300 bg-black/50 border border-zinc-700 rounded-full px-3 py-1">
+                    Sys/{p.code}
+                  </span>
+                  <span
+                    className="font-mono text-[9px] tracking-[0.3em] uppercase border rounded-full px-2.5 py-1 backdrop-blur"
+                    style={{
+                      color: p.accent,
+                      borderColor: `${p.accent}55`,
+                      background: `${p.accent}10`,
+                    }}
+                  >
+                    • {p.status}
+                  </span>
+                </div>
               </div>
 
               <div className="p-7">
@@ -115,7 +116,18 @@ export default function Projects() {
                   ))}
                 </div>
               </div>
-            </motion.a>
+              </Link>
+              <a
+                href={p.repo}
+                target="_blank"
+                rel="noreferrer"
+                className="absolute top-4 right-4 z-10 font-mono text-[9px] tracking-[0.25em] uppercase text-slate-300 bg-black/60 border border-zinc-700 hover:border-[#39FF14] hover:text-[#39FF14] backdrop-blur rounded-full px-2.5 py-1 transition-colors"
+                data-testid={`project-${p.id}-repo-link`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                ↗ Repo
+              </a>
+            </motion.div>
           ))}
         </div>
       </div>

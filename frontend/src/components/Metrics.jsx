@@ -44,7 +44,7 @@ export default function Metrics() {
         <div className="flex items-center justify-between gap-3 mb-12 flex-wrap">
           <div className="flex items-center gap-3">
             <span className="font-mono text-[11px] tracking-[0.3em] uppercase text-[#00E5FF]">
-              11 // Live Telemetry
+              12 // Live Telemetry
             </span>
             <div className="divider-x flex-1 max-w-[160px]" />
           </div>

@@ -6,6 +6,7 @@ import Skills from "./Skills";
 import Stack from "./Stack";
 import Experience from "./Experience";
 import Projects from "./Projects";
+import GithubFeed from "./GithubFeed";
 import Credentials from "./Credentials";
 import Services from "./Services";
 import Testimonials from "./Testimonials";
@@ -26,6 +27,7 @@ export default function Portfolio() {
         <Stack />
         <Experience />
         <Projects />
+        <GithubFeed />
         <Credentials />
         <Services />
         <Testimonials />

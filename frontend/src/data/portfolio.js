@@ -17,6 +17,7 @@ export const PROFILE = {
     phoneRaw: "+601118544005",
     whatsapp: "https://wa.me/qr/CLBPIW5WFCY3B1",
     github: "https://github.com/mrmarvel123",
+    calendly: "https://calendly.com/alanmarvel5/30min",
   },
 };
 
@@ -100,10 +101,11 @@ export const NAV = [
   { id: "stack", label: "03 // Stack" },
   { id: "experience", label: "04 // Experience" },
   { id: "projects", label: "05 // Systems" },
-  { id: "credentials", label: "06 // Credentials" },
-  { id: "services", label: "07 // Engage" },
-  { id: "testimonials", label: "08 // Voices" },
-  { id: "contact", label: "09 // Contact" },
+  { id: "github", label: "06 // OSS" },
+  { id: "credentials", label: "07 // Credentials" },
+  { id: "services", label: "08 // Engage" },
+  { id: "testimonials", label: "09 // Voices" },
+  { id: "contact", label: "10 // Contact" },
 ];
 
 export const TESTIMONIALS = [
