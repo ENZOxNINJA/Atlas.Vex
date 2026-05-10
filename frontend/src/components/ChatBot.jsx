@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bot, X, Send, Sparkles, Briefcase, CheckCircle2 } from "lucide-react";
+import { X, Send, Briefcase, CheckCircle2 } from "lucide-react";
+import AiFaceLogo from "./AiFaceLogo";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const SESSION_KEY = "atlasvex.chat.session";
@@ -325,11 +326,11 @@ export default function ChatBot() {
         style={{ left: pos.x, top: pos.y, touchAction: "none" }}
         className="fixed z-[60] group cursor-grab active:cursor-grabbing select-none"
       >
-        <span className="absolute inset-0 rounded-full bg-[#00E5FF] opacity-30 blur-2xl group-hover:opacity-50 transition-opacity pointer-events-none" />
-        <span className="relative flex items-center gap-2 pl-4 pr-5 py-3 rounded-full border border-[#00E5FF]/60 bg-[#020617]/90 backdrop-blur-xl text-[#00E5FF] hover:bg-[#00E5FF]/10 transition-colors pointer-events-none">
-          <span className="relative flex">
-            <Bot size={18} />
-            <span className="absolute -top-0.5 -right-1 w-2 h-2 rounded-full bg-[#39FF14] blink shadow-[0_0_10px_#39FF14]" />
+        <span className="absolute -inset-2 rounded-full bg-[#00E5FF] opacity-25 blur-2xl group-hover:opacity-50 transition-opacity pointer-events-none" />
+        <span className="relative flex items-center gap-2.5 pl-2 pr-4 py-1.5 rounded-full border border-[#00E5FF]/60 bg-[#020617]/90 backdrop-blur-xl text-[#00E5FF] hover:bg-[#00E5FF]/10 transition-colors pointer-events-none">
+          <span className="relative">
+            <AiFaceLogo size={40} speaking={loading} listening={open && !loading} />
+            <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-[#39FF14] blink shadow-[0_0_10px_#39FF14]" />
           </span>
           <span className="font-mono text-[11px] tracking-[0.22em] uppercase">
             {open ? "Close" : "Atlas Vex"}
@@ -361,9 +362,8 @@ export default function ChatBot() {
           >
             <div className="px-5 py-4 border-b border-zinc-800 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <span className="relative w-9 h-9 rounded-xl border border-[#00E5FF]/40 bg-[#00E5FF]/10 flex items-center justify-center text-[#00E5FF]">
-                  <Sparkles size={15} />
-                  <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-[#39FF14] blink shadow-[0_0_8px_#39FF14]" />
+                <span className="relative w-10 h-10 flex items-center justify-center">
+                  <AiFaceLogo size={40} speaking={loading} listening={!loading} />
                 </span>
                 <div>
                   <div className="font-display text-[#F8FAFC] text-sm tracking-tight">
